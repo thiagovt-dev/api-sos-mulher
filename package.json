@@ -10,6 +10,7 @@
     "start:dev": "nest start --watch",
     "build": "nest build",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix && prettier --write \"src/**/*.{ts,tsx}\"",
     "test": "jest --config ./jest.config.ts",
     "test:cov": "jest --config ./jest.config.ts --coverage",
     "test:e2e": "bunx prisma migrate deploy && NODE_ENV=test jest --config ./test/jest-e2e.json",

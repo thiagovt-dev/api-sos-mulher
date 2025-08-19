@@ -2,12 +2,7 @@ module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
   parserOptions: { tsconfigRootDir: __dirname, project: ['./tsconfig.json'] },
-  plugins: [
-    '@typescript-eslint',
-    'import',
-    'simple-import-sort',
-    'unused-imports',
-  ],
+  plugins: ['@typescript-eslint', 'import', 'simple-import-sort', 'unused-imports'],
   extends: [
     'plugin:@typescript-eslint/recommended',
     'plugin:import/recommended',
@@ -22,4 +17,15 @@ module.exports = {
     'simple-import-sort/exports': 'warn',
   },
   ignorePatterns: ['dist/**', 'node_modules/**', 'prisma/**'],
+  overrides: [
+    {
+      files: ['**/*.spec.ts', '**/*.e2e-spec.ts'],
+      rules: {
+        '@typescript-eslint/require-await': 'off',
+        '@typescript-eslint/no-unsafe-argument': 'off',
+        '@typescript-eslint/no-unsafe-member-access': 'off',
+        '@typescript-eslint/no-unsafe-return': 'off',
+      },
+    },
+  ],
 };

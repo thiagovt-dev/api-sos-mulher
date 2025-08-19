@@ -1,6 +1,5 @@
-import { UserRepository } from "src/modules/users/domain/repositories/user.repository";
-import { CreateUserUseCase } from "../../use-cases/create-user.use-case";
-
+import { UserRepository } from 'src/modules/users/domain/repositories/user.repository';
+import { CreateUserUseCase } from '../../use-cases/create-user.use-case';
 
 class InMemoryUsersRepo implements UserRepository {
   private store = new Map<string, any>();

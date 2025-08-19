@@ -21,15 +21,11 @@ export class PrismaUserRepository implements UserRepository {
 
   async findByEmail(email: string): Promise<User | null> {
     const row = await this.prisma.user.findUnique({ where: { email } });
-    return row
-      ? new User(row.id, row.email, row.name, row.passwordHash, row.createdAt)
-      : null;
+    return row ? new User(row.id, row.email, row.name, row.passwordHash, row.createdAt) : null;
   }
 
   async findById(id: string): Promise<User | null> {
     const row = await this.prisma.user.findUnique({ where: { id } });
-    return row
-      ? new User(row.id, row.email, row.name, row.passwordHash, row.createdAt)
-      : null;
+    return row ? new User(row.id, row.email, row.name, row.passwordHash, row.createdAt) : null;
   }
 }

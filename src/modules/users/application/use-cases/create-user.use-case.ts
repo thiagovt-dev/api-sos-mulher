@@ -14,13 +14,7 @@ export class CreateUserUseCase {
     if (exists) throw new BadRequestException('E-mail já cadastrado');
 
     const passwordHash = await bcrypt.hash(input.password, 10);
-    const user = new User(
-      randomUUID(),
-      input.email,
-      input.name,
-      passwordHash,
-      new Date(),
-    );
+    const user = new User(randomUUID(), input.email, input.name, passwordHash, new Date());
     await this.users.create(user);
     return { id: user.id, email: user.email, name: user.name };
   }

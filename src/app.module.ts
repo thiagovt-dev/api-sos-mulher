@@ -13,7 +13,7 @@ const isTest = process.env.NODE_ENV === 'test';
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [appConfig] }),
     PrismaModule,
-    ...(!isTest ? [BullmqModule] : []), 
+    ...(!isTest ? [BullmqModule] : []),
     HealthModule,
     UsersModule,
     // AuthModule,

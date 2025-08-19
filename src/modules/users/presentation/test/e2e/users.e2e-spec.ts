@@ -30,10 +30,7 @@ describe('Users (e2e)', () => {
       password: 'secret123',
     };
 
-    const res = await request(server)
-      .post('/api/users')
-      .send(payload)
-      .expect(201);
+    const res = await request(server).post('/api/users').send(payload).expect(201);
     const id = res.body.id as string;
 
     const resGet = await request(server).get(`/api/users/${id}`).expect(200);
@@ -50,7 +47,7 @@ describe('Users (e2e)', () => {
 
     await request(server)
       .post('/api/users')
-      .send({ email, name: 'Jhon Doe', password: 'secret123' }) 
+      .send({ email, name: 'Jhon Doe', password: 'secret123' })
       .expect(201);
 
     const res = await request(server)
