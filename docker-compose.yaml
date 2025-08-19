@@ -25,27 +25,6 @@ services:
     volumes:
       - redisdata:/data
 
-  prisma-studio:
-    image: node:20-slim
-    container_name: api-sos-mulher-prisma-studio
-    working_dir: /app
-    command: >
-      sh -lc "npx prisma studio
-      --host 0.0.0.0
-      --port 5555
-      --schema=/app/prisma/schema.prisma
-      --browser none"
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/sos_mulher?schema=public
-      PRISMA_TELEMETRY_INFORMATION: "none"
-    volumes:
-      - .:/app:ro
-    ports:
-      - "127.0.0.1:5555:5555"
-    depends_on:
-      db:
-        condition: service_healthy
-
 volumes:
   dbdata:
   redisdata:
