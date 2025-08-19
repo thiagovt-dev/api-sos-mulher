@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        ports: ['5432:5432']
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sos_mulher_test
+        options: >-
+          --health-cmd="pg_isready -U postgres -d sos_mulher_test"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd="redis-cli ping || exit 1"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      NODE_ENV: test
+      # DB de teste acessível via localhost (porta mapeada pelo service)
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sos_mulher_test?schema=public
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      JWT_SECRET: test-secret
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install deps
+        run: bun install
+
+      - name: Prisma generate
+        run: bunx prisma generate
+
+      - name: Apply migrations (test DB)
+        run: bunx prisma migrate deploy
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Unit tests (coverage)
+        run: bun run test:cov
+
+      - name: E2E tests
+        run: bun run test:e2e
