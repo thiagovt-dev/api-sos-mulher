@@ -5,20 +5,32 @@ const config: Config = {
   rootDir: '.',
   testEnvironment: 'node',
   transform: { '^.+\\.(t|j)s$': 'ts-jest' },
+
   testMatch: ['<rootDir>/src/**/test/unit/**/*.spec.ts'],
-  collectCoverage: false,
+
+  // Coverage focado em Domain + Application (use-cases)
   collectCoverageFrom: [
-    'src/**/*.ts',
+    'src/modules/**/domain/**/*.ts',
+    'src/modules/**/application/use-cases/**/*.ts',
+
+    '!src/**/*.spec.ts',
+    '!src/**/test/**',
+    '!src/**/presentation/**',
+    '!src/**/infra/**',
+    '!src/**/application/dto/**',
+    '!src/**/config/**',
+    '!src/health/**',
     '!src/main.ts',
-    '!src/**/presentation/**/*.ts',
-    '!src/**/infra/database/**/*.ts',
-    '!src/**/config/**/*.ts',
-    '!**/*.module.ts'
+    '!src/app.module.ts',
+    '!src/app.controller.ts',
+    '!src/app.service.ts',
+    '!**/*.module.ts',
   ],
+
   coverageReporters: ['text', 'lcov'],
   coverageThreshold: {
-    global: { branches: 70, functions: 75, lines: 75, statements: 75 }
-  }
+    global: { branches: 70, functions: 75, lines: 75, statements: 75 },
+  },
 };
 
 export default config;
