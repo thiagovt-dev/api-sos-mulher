@@ -10,8 +10,11 @@
     "start:dev": "nest start --watch",
     "build": "nest build",
     "lint": "eslint \"src/**/*.ts\"",
-    "test": "jest",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test": "jest --config ./jest.config.ts",
+    "test:cov": "jest --config ./jest.config.ts --coverage",
+    "test:e2e": "bunx prisma migrate deploy && NODE_ENV=test jest --config ./test/jest-e2e.json",
+    "test:e2e:cov": "bunx prisma migrate deploy && NODE_ENV=test jest --config ./test/jest-e2e.json --coverage",
+    "ci:test": "bun run lint && bun run test:cov && bun run test:e2e"
   },
   "dependencies": {
     "@fastify/middie": "^9.0.3",

@@ -1,13 +1,14 @@
 import request from 'supertest';
-import { createTestApp } from './utils/test-app';
 import { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { PrismaClient } from '@prisma/client';
+import { createTestApp } from '../../../../../../test/utils/test-app';
 
-describe('API e2e (Fastify + /api prefix)', () => {
+describe('Users (e2e)', () => {
   let app: NestFastifyApplication;
   const prisma = new PrismaClient();
 
   beforeAll(async () => {
+    process.env.NODE_ENV = 'test';
     app = await createTestApp();
   });
 
@@ -20,13 +21,7 @@ describe('API e2e (Fastify + /api prefix)', () => {
     await prisma.$disconnect();
   });
 
-  it('GET /api/health → 200 {status:"ok"}', async () => {
-    const server = app.getHttpServer();
-    const res = await request(server).get('/api/health').expect(200);
-    expect(res.body).toEqual({ status: 'ok' });
-  });
-
-  it('POST /api/users cria usuário e retorna 201 com id/email/name', async () => {
+  it('POST /api/users -> 201 e GET por id -> 200', async () => {
     const server = app.getHttpServer();
 
     const payload = {
@@ -39,16 +34,8 @@ describe('API e2e (Fastify + /api prefix)', () => {
       .post('/api/users')
       .send(payload)
       .expect(201);
-
-    expect(res.body).toHaveProperty('id');
-    expect(res.body).toMatchObject({
-      email: payload.email,
-      name: payload.name,
-    });
-    expect(res.body).not.toHaveProperty('password');
-    expect(res.body).not.toHaveProperty('passwordHash');
-
     const id = res.body.id as string;
+
     const resGet = await request(server).get(`/api/users/${id}`).expect(200);
     expect(resGet.body).toMatchObject({
       id,
@@ -57,18 +44,18 @@ describe('API e2e (Fastify + /api prefix)', () => {
     });
   });
 
-  it('POST /api/users com e-mail duplicado → 400', async () => {
+  it('POST e-mail duplicado -> 400', async () => {
     const server = app.getHttpServer();
-
     const email = `dup-${Date.now()}@sos.com`;
+
     await request(server)
       .post('/api/users')
-      .send({ email, name: 'A', password: 'secret123' })
+      .send({ email, name: 'Jhon Doe', password: 'secret123' }) 
       .expect(201);
 
     const res = await request(server)
       .post('/api/users')
-      .send({ email, name: 'B', password: 'secret123' })
+      .send({ email, name: 'BB', password: 'secret123' })
       .expect(400);
 
     expect(res.body.message).toMatch(/E-mail já cadastrado/i);

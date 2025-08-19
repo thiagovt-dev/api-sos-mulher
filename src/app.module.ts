@@ -7,15 +7,16 @@ import { UsersModule } from './modules/users/presentation/users.module';
 import appConfig from './config/app.config';
 import { BullmqModule } from './infra/queue/bullmq.module';
 
+const isTest = process.env.NODE_ENV === 'test';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [appConfig] }),
     PrismaModule,
-    BullmqModule,
+    ...(!isTest ? [BullmqModule] : []), 
     HealthModule,
     UsersModule,
     // AuthModule,
-    // IncidentsModule, DispatchModule, VoiceModule, LocationModule, AuditModule, NotificationsModule (próximas sprints)
   ],
 })
 export class AppModule {}
