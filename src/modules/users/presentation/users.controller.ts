@@ -1,19 +1,13 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { CreateUserDto } from '../application/dto/create-user.dto';
-import { CreateUserUseCase } from '../application/use-cases/create-user.use-case';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { UserRepository } from '../domain/repositories/user.repository';
+import { JwtAuthGuard } from '@/modules/auth/infra/guard/jwt.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(
-    private readonly createUser: CreateUserUseCase,
     private readonly usersRepo: UserRepository,
   ) {}
-
-  @Post()
-  create(@Body() body: CreateUserDto) {
-    return this.createUser.execute(body);
-  }
 
   @Get(':id')
   async getById(@Param('id') id: string) {

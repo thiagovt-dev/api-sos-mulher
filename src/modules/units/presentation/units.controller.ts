@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { IsOptional, IsString, IsLatitude, IsLongitude } from 'class-validator';
 import { PrismaUnitRepository } from '../infra/repositories/prisma-units.repository';
+import { JwtAuthGuard } from '@/modules/auth/infra/guard/jwt.guard';
 
 class CreateUnitDto {
   @IsString() name!: string;
@@ -14,6 +15,7 @@ class UpdateTokenDto {
   @IsString() token!: string;
 }
 
+@UseGuards(JwtAuthGuard)
 @Controller('units')
 export class UnitsController {
   constructor(private readonly repo: PrismaUnitRepository) {}

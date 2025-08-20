@@ -4,8 +4,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 export function setupSwagger(app: INestApplication) {
   const config = new DocumentBuilder()
     .setTitle('SOS Mulher Segura API')
-    .setDescription('API do backend (NestJS) - Sprint 1')
-    .setVersion('v0.1')
+    .setDescription('API do backend (NestJS)')
+    .setVersion('v0.2.0')
     .addBearerAuth()
     .build();
 

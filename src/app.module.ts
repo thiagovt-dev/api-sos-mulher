@@ -5,7 +5,7 @@ import { HealthModule } from './health/health.module';
 import { UsersModule } from './modules/users/presentation/users.module';
 import { IncidentsModule } from './modules/incidents/presentation/incidents.module';
 import { DispatchModule } from './modules/dispatch/presentation/dispatch.module';
-// import { AuthModule } from './modules/auth/presentation/auth.module';
+import { AuthModule } from './modules/auth/presentation/auth.module';
 import appConfig from './config/app.config';
 import { BullmqModule } from './infra/queue/bullmq.module';
 import { UnitsModule } from './modules/units/presentation/units.module';
@@ -17,12 +17,12 @@ const isTest = process.env.NODE_ENV === 'test';
     ConfigModule.forRoot({ isGlobal: true, load: [appConfig] }),
     PrismaModule,
     ...(!isTest ? [BullmqModule] : []),
+    AuthModule,
     HealthModule,
     UsersModule,
     IncidentsModule,
     DispatchModule,
     UnitsModule,
-    // AuthModule,
   ],
 })
 export class AppModule {}

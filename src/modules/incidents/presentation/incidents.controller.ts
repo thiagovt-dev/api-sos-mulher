@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { IsLatitude, IsLongitude, IsOptional, IsString } from 'class-validator';
 import { CreateIncidentUseCase } from '../application/use-cases/create-incident.use-case';
 import { PrismaIncidentRepository } from '../infra/repositories/prisma-incident.repository';
+import { JwtAuthGuard } from '@/modules/auth/infra/guard/jwt.guard';
 
 class CreateIncidentDto {
   @IsLatitude() lat!: number;
@@ -10,6 +11,7 @@ class CreateIncidentDto {
   @IsOptional() @IsString() description?: string;
 }
 
+@UseGuards(JwtAuthGuard)
 @Controller('incidents')
 export class IncidentsController {
   constructor(

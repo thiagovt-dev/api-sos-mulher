@@ -3,8 +3,8 @@ import { PrismaClient } from '@prisma/client';
 import { IncidentsGateway } from '../../../incidents/infra/incidents.gateway';
 import { Queue } from 'bullmq';
 import { PrismaDispatchRepository } from '../../infra/repositories/prisma-dispatch.repository';
-import { RedlockService } from '@/shared/locks/redlock.service';
 import { PUSH_QUEUE } from '@/infra/queue/tokens';
+import { RedlockService } from '@/shared/locks/redlock.service';
 
 @Injectable()
 export class CreateDispatchUseCase {

@@ -7,7 +7,7 @@ export class CreateIncidentUseCase {
   constructor(private readonly repo: PrismaIncidentRepository) {}
 
   async execute(input: { lat: number; lng: number; address?: string; description?: string }) {
-    const code = `INC-${randomBytes(3).toString('hex').toUpperCase()}`; // ex: INC-9A21F3
+    const code = `INC-${randomBytes(3).toString('hex').toUpperCase()}`;
     const incident = await this.repo.create({
       code,
       lat: input.lat,
