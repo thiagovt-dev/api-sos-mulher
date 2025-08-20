@@ -7,9 +7,10 @@ import { CreateDispatchUseCase } from '../application/use-cases/create-dispatch.
 import { RedlockService } from '@/shared/locks/redlock.service';
 import { FcmService } from '@/shared/notifications/fcm.service';
 import { BullmqModule } from '@/infra/queue/bullmq.module';
+import { DevicesModule } from '@/modules/devices/presentation/devices.module';
 
 @Module({
-  imports: [BullmqModule, IncidentsModule],
+  imports: [BullmqModule, IncidentsModule, DevicesModule],
   controllers: [DispatchController],
   providers: [
     PrismaClient,
