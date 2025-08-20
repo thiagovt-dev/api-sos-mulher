@@ -5,11 +5,20 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { setupSwagger } from './config/swagger.config';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import fastifyStatic from '@fastify/static';
+import { join } from 'path';
+
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter(), {
     cors: true,
   });
+
+app.register(fastifyStatic, {
+  root: join(process.cwd(), 'public'), 
+  prefix: '/public/',
+});
+
 
   // Prefixo global
   app.setGlobalPrefix('api');

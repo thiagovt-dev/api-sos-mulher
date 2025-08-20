@@ -4,7 +4,9 @@ import { PrismaClient } from '@prisma/client';
 import { Inject } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { PUSH_QUEUE } from '@/infra/queue/tokens';
+import { ApiBody, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Debug')
 @Controller('debug')
 export class DebugController {
   constructor(
@@ -14,11 +16,25 @@ export class DebugController {
   ) {}
 
   @Get('push/health')
+  @ApiOperation({ summary: 'Status do serviço de push' })
+  @ApiOkResponse({ schema: { example: { fcm: 'enabled' } } })
   health() {
     return { fcm: this.fcm.isEnabled() ? 'enabled' : 'disabled' };
   }
 
   @Post('push/token')
+  @ApiOperation({ summary: 'Enviar push direto para um token' })
+  @ApiBody({
+    schema: {
+      example: {
+        token: 'fcm_token_abc123',
+        title: 'Teste',
+        body: 'Mensagem de teste',
+        data: { type: 'DEBUG' },
+      },
+    },
+  })
+  @ApiOkResponse({ schema: { example: { ok: true } } })
   async pushDirect(
     @Body() body: { token: string; title?: string; body?: string; data?: Record<string, string> },
   ) {
@@ -38,6 +54,24 @@ export class DebugController {
   }
 
   @Post('push/unit')
+  @ApiOperation({ summary: 'Enviar push para uma unidade' })
+  @ApiBody({
+    schema: {
+      example: {
+        unitId: 'aaaa1111-bbbb-2222-cccc-3333dddd4444',
+        title: 'Novo chamado',
+        body: 'Atenda o incidente INC-1A2B3C',
+        data: { type: 'INCIDENT_DISPATCH', incidentId: 'c1f20143-1f7d-4a8b-908f-3f0f6efb0f9a' },
+      },
+    },
+  })
+  @ApiQuery({
+    name: 'queued',
+    required: false,
+    example: '1',
+    description: 'Enviar via fila (1) ou direto',
+  })
+  @ApiOkResponse({ schema: { example: { ok: true, queued: true } } })
   async pushUnit(
     @Body() body: { unitId: string; title?: string; body?: string; data?: Record<string, string> },
     @Query('queued') queued?: string,
