@@ -1,27 +1,53 @@
-import { Global, Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Queue } from 'bullmq';
+import { Global, Module, OnModuleDestroy } from '@nestjs/common';
 import IORedis from 'ioredis';
+import { Queue, Worker, JobsOptions } from 'bullmq';
+import { PUSH_QUEUE } from './tokens';
+import { FcmService } from '../../shared/notifications/fcm.service';
 
 @Global()
 @Module({
+  imports: [],
   providers: [
+    FcmService,
     {
-      provide: 'REDIS_CONNECTION',
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
-        return new IORedis({
-          host: config.get<string>('redis.host'),
-          port: config.get<number>('redis.port'),
+      provide: PUSH_QUEUE,
+      useFactory: () => {
+        const connection = new IORedis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
+          maxRetriesPerRequest: null,
+        });
+        return new Queue('push', {
+          connection,
+          defaultJobOptions: { removeOnComplete: 50, removeOnFail: 100 } as JobsOptions,
         });
       },
     },
     {
-      provide: 'DEFAULT_QUEUE',
-      inject: ['REDIS_CONNECTION'],
-      useFactory: (conn: IORedis) => new Queue('default', { connection: conn }),
+      provide: 'PUSH_WORKER',
+      inject: [FcmService],
+      useFactory: (fcm: FcmService) => {
+        const connection = new IORedis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
+          maxRetriesPerRequest: null,
+        });
+        const worker = new Worker(
+          'push',
+          async (job) => {
+            const { token, data, notification } = job.data as {
+              token: string;
+              data: Record<string, string>;
+              notification?: { title: string; body: string };
+            };
+            await fcm.safeSendToToken(token, data, notification);
+          },
+          { connection },
+        );
+        return worker;
+      },
     },
   ],
-  exports: ['REDIS_CONNECTION', 'DEFAULT_QUEUE'],
+  exports: [PUSH_QUEUE],
 })
-export class BullmqModule {}
+export class BullmqModule implements OnModuleDestroy {
+  async onModuleDestroy() {
+    /* noop */
+  }
+}

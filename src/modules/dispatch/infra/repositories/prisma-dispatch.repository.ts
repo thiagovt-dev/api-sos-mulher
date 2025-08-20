@@ -6,10 +6,17 @@ export class PrismaDispatchRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   async assign(incidentId: string, unitId: string) {
-    return this.prisma.dispatch.create({
-      data: { incidentId, unitId, status: DispatchStatus.PENDING },
-      include: { incident: true, unit: true },
-    });
+    const [created] = await this.prisma.$transaction([
+      this.prisma.dispatch.create({
+        data: { incidentId, unitId, status: DispatchStatus.PENDING },
+        include: { incident: true, unit: true },
+      }),
+      this.prisma.incident.update({
+        where: { id: incidentId },
+        data: { status: 'IN_DISPATCH' },
+      }),
+    ]);
+    return created;
   }
 
   markNotified(id: string) {
