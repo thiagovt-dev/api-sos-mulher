@@ -9,6 +9,7 @@ import { AuthModule } from './modules/auth/presentation/auth.module';
 import appConfig from './config/app.config';
 import { BullmqModule } from './infra/queue/bullmq.module';
 import { UnitsModule } from './modules/units/presentation/units.module';
+import { DebugModule } from './modules/debug/debug.module';
 
 const isTest = process.env.NODE_ENV === 'test';
 
@@ -23,6 +24,7 @@ const isTest = process.env.NODE_ENV === 'test';
     IncidentsModule,
     DispatchModule,
     UnitsModule,
+    DebugModule
   ],
 })
 export class AppModule {}
