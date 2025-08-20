@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './infra/database/prisma.module';
 import { HealthModule } from './health/health.module';
 import { UsersModule } from './modules/users/presentation/users.module';
+import { IncidentsModule } from './modules/incidents/presentation/incidents.module';
+import { DispatchModule } from './modules/dispatch/presentation/dispatch.module';
 // import { AuthModule } from './modules/auth/presentation/auth.module';
 import appConfig from './config/app.config';
 import { BullmqModule } from './infra/queue/bullmq.module';
@@ -16,6 +18,8 @@ const isTest = process.env.NODE_ENV === 'test';
     ...(!isTest ? [BullmqModule] : []),
     HealthModule,
     UsersModule,
+    IncidentsModule,
+    DispatchModule,
     // AuthModule,
   ],
 })
