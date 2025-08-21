@@ -37,6 +37,8 @@ enum IncidentEventType {
   PUSH_SENT
   UNIT_ACCEPTED
   STATUS_CHANGED
+  VOICE_JOIN_ISSUED
+  VOICE_ROOM_CLOSED
 }
 
 model Incident {

@@ -5,7 +5,7 @@ export function setupSwagger(app: INestApplication) {
   const config = new DocumentBuilder()
     .setTitle('SOS Mulher Segura API')
     .setDescription('API do backend (NestJS).')
-    .setVersion('v0.2.0')
+    .setVersion('v0.3.0')
     .addBearerAuth()
     .build();
 
