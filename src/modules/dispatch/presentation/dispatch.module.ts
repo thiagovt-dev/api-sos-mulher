@@ -8,6 +8,7 @@ import { RedlockService } from '@/shared/locks/redlock.service';
 import { FcmService } from '@/shared/notifications/fcm.service';
 import { BullmqModule } from '@/infra/queue/bullmq.module';
 import { DevicesModule } from '@/modules/devices/presentation/devices.module';
+import { AcceptDispatchUseCase } from '../application/use-cases/accept-dispatch.use-case';
 
 @Module({
   imports: [BullmqModule, IncidentsModule, DevicesModule],
@@ -16,6 +17,7 @@ import { DevicesModule } from '@/modules/devices/presentation/devices.module';
     PrismaClient,
     PrismaDispatchRepository,
     CreateDispatchUseCase,
+    AcceptDispatchUseCase,
     RedlockService,
     FcmService,
   ],

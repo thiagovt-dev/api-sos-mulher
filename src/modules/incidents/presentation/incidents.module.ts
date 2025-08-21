@@ -4,10 +4,11 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaIncidentRepository } from '../infra/repositories/prisma-incident.repository';
 import { CreateIncidentUseCase } from '../application/use-cases/create-incident.use-case';
 import { IncidentsGateway } from '../infra/incidents.gateway';
+import { CloseIncidentUseCase } from '../application/use-cases/close-incident.use-case';
 
 @Module({
   controllers: [IncidentsController],
-  providers: [PrismaClient, PrismaIncidentRepository, CreateIncidentUseCase, IncidentsGateway],
+  providers: [PrismaClient, PrismaIncidentRepository, CreateIncidentUseCase, IncidentsGateway, CloseIncidentUseCase],
   exports: [PrismaIncidentRepository, IncidentsGateway],
 })
 export class IncidentsModule {}

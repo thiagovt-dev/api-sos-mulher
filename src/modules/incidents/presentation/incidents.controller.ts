@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { IsLatitude, IsLongitude, IsOptional, IsString } from 'class-validator';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { IsIn, IsLatitude, IsLongitude, IsOptional, IsString } from 'class-validator';
 import { CreateIncidentUseCase } from '../application/use-cases/create-incident.use-case';
 import { PrismaIncidentRepository } from '../infra/repositories/prisma-incident.repository';
 import { JwtAuthGuard } from '@/modules/auth/infra/guard/jwt.guard';
 import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiProperty } from '@nestjs/swagger';
+import { CloseIncidentUseCase } from '../application/use-cases/close-incident.use-case';
 
 class CreateIncidentDto {
   @ApiProperty({ example: -23.55052, description: 'Latitude do local do incidente' })
@@ -25,6 +26,10 @@ class CreateIncidentDto {
   @IsString()
   description?: string;
 }
+class CloseIncidentDto {
+  @IsOptional() @IsString() reason?: string;
+  @IsOptional() @IsIn(['RESOLVED', 'CANCELED'] as const) as?: 'RESOLVED' | 'CANCELED';
+}
 
 @ApiTags('Incidents')
 @UseGuards(JwtAuthGuard)
@@ -34,6 +39,7 @@ export class IncidentsController {
   constructor(
     private readonly createIncident: CreateIncidentUseCase,
     private readonly repo: PrismaIncidentRepository,
+    private readonly closeIncident: CloseIncidentUseCase,
   ) {}
 
   @Post()
@@ -95,5 +101,10 @@ export class IncidentsController {
   })
   list() {
     return this.repo.listOpen();
+  }
+
+  @Post(':id/close')
+  close(@Param('id') id: string, @Body() dto: CloseIncidentDto) {
+    return this.closeIncident.execute({ incidentId: id, reason: dto.reason, as: dto.as });
   }
 }
