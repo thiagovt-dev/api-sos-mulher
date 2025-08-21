@@ -1,7 +1,16 @@
 import { User } from '../entities/user.entity';
 
 export abstract class UserRepository {
-  abstract create(user: User): Promise<void>;
+  /**
+   * Creates a user letting the database generate the UUID id.
+   * Returns the persisted user entity.
+   */
+  abstract create(input: {
+    email: string;
+    name: string;
+    passwordHash: string;
+  }): Promise<User>;
+
   abstract findByEmail(email: string): Promise<User | null>;
   abstract findById(id: string): Promise<User | null>;
 }

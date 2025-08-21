@@ -14,8 +14,13 @@
     "test": "jest --config ./jest.config.ts",
     "test:cov": "jest --config ./jest.config.ts --coverage",
     "test:e2e": "bunx prisma migrate deploy && NODE_ENV=test jest --config ./test/jest-e2e.json",
+    "test:unit": "jest --config ./jest.config.ts --testPathPatterns=src/.*/test/unit/.*\\.spec\\.ts",
     "test:e2e:cov": "bunx prisma migrate deploy && NODE_ENV=test jest --config ./test/jest-e2e.json --coverage",
-    "ci:test": "bun run lint && bun run test:cov && bun run test:e2e"
+    "ci:test": "bun run lint && bun run test:cov && bun run test:e2e",
+    "seed": "bunx prisma db seed"
+  },
+  "prisma": {
+    "seed": "bun ./prisma/seeds/seed.ts"
   },
   "dependencies": {
     "@fastify/middie": "^9.0.3",
@@ -28,8 +33,10 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.1.6",
     "@nestjs/platform-fastify": "^11.1.6",
+    "@nestjs/platform-socket.io": "^11.1.6",
     "@nestjs/swagger": "^11.2.0",
     "@nestjs/terminus": "^11.0.0",
+    "@nestjs/websockets": "^11.1.6",
     "@prisma/client": "^6.14.0",
     "@sentry/node": "^10.5.0",
     "@sentry/profiling-node": "^10.5.0",
@@ -37,12 +44,12 @@
     "bullmq": "^5.58.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
-    "fastify": "^5.5.0",
     "firebase-admin": "^13.4.0",
     "ioredis": "^5.7.0",
     "livekit-server-sdk": "^2.13.2",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
+    "redlock": "^5.0.0-beta.2",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "swagger-ui-express": "^5.0.1"
@@ -55,6 +62,7 @@
     "@nestjs/testing": "^11.0.1",
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.0",
+    "@types/ioredis": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.10.7",
     "@types/supertest": "^6.0.3",

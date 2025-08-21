@@ -8,6 +8,10 @@ const config: Config = {
 
   testMatch: ['<rootDir>/src/**/test/unit/**/*.spec.ts'],
 
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
+
   // Coverage focado em Domain + Application (use-cases)
   collectCoverageFrom: [
     'src/modules/**/domain/**/*.ts',

@@ -1,0 +1,25 @@
+import { Module } from '@nestjs/common';
+import { DispatchController } from './dispatch.controller';
+import { PrismaClient } from '@prisma/client';
+import { IncidentsModule } from '@/modules/incidents/presentation/incidents.module';
+import { PrismaDispatchRepository } from '../infra/repositories/prisma-dispatch.repository';
+import { CreateDispatchUseCase } from '../application/use-cases/create-dispatch.use-case';
+import { RedlockService } from '@/shared/locks/redlock.service';
+import { FcmService } from '@/shared/notifications/fcm.service';
+import { BullmqModule } from '@/infra/queue/bullmq.module';
+import { DevicesModule } from '@/modules/devices/presentation/devices.module';
+import { AcceptDispatchUseCase } from '../application/use-cases/accept-dispatch.use-case';
+
+@Module({
+  imports: [BullmqModule, IncidentsModule, DevicesModule],
+  controllers: [DispatchController],
+  providers: [
+    PrismaClient,
+    PrismaDispatchRepository,
+    CreateDispatchUseCase,
+    AcceptDispatchUseCase,
+    RedlockService,
+    FcmService,
+  ],
+})
+export class DispatchModule {}

@@ -13,4 +13,118 @@ model User {
   name         String
   passwordHash String
   createdAt    DateTime @default(now())
+  Device       Device[]
+}
+
+enum IncidentStatus {
+  OPEN
+  IN_DISPATCH
+  RESOLVED
+  CANCELED
+}
+
+enum DispatchStatus {
+  PENDING
+  NOTIFIED
+  ACCEPTED
+  REJECTED
+  CANCELED
+}
+
+enum IncidentEventType {
+  CREATED
+  DISPATCH_CREATED
+  PUSH_SENT
+  UNIT_ACCEPTED
+  STATUS_CHANGED
+}
+
+model Incident {
+  id          String         @id @default(uuid())
+  code        String         @unique
+  description String? // opcional (MVP)
+  lat         Decimal        @db.Decimal(9, 6)
+  lng         Decimal        @db.Decimal(9, 6)
+  address     String?
+  status      IncidentStatus @default(OPEN)
+  audioRoomId String? // reservado para Sprint 3 (voz)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  dispatches Dispatch[]
+  events     IncidentEvent[]
+
+  @@index([status, createdAt])
+}
+
+model Unit {
+  id         String    @id @default(uuid())
+  name       String
+  plate      String?   @unique
+  active     Boolean   @default(true)
+  fcmToken   String? // token do app da viatura
+  lastLat    Decimal?  @db.Decimal(9, 6)
+  lastLng    Decimal?  @db.Decimal(9, 6)
+  lastSeenAt DateTime?
+
+  dispatches Dispatch[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  Device     Device[]
+
+  @@index([active])
+}
+
+model Dispatch {
+  id         String         @id @default(uuid())
+  incidentId String
+  unitId     String
+  status     DispatchStatus @default(PENDING)
+  notifiedAt DateTime?
+  acceptedAt DateTime?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  unit     Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@unique([incidentId, unitId])
+}
+
+model IncidentEvent {
+  id         String            @id @default(uuid())
+  incidentId String
+  type       IncidentEventType
+  payload    Json?
+  createdAt  DateTime          @default(now())
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId, createdAt])
+}
+
+enum DevicePlatform {
+  ANDROID
+  IOS
+  WEB
+}
+
+model Device {
+  id         String         @id @default(uuid())
+  unitId     String?
+  userId     String?
+  platform   DevicePlatform
+  token      String         @unique
+  deviceId   String?
+  appVersion String?
+  active     Boolean        @default(true)
+  lastSeenAt DateTime?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  unit Unit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([unitId])
+  @@index([userId])
 }

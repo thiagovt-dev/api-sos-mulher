@@ -7,16 +7,15 @@ import { User } from '../../domain/entities/user.entity';
 export class PrismaUserRepository implements UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(user: User): Promise<void> {
-    await this.prisma.user.create({
+  async create(input: { email: string; name: string; passwordHash: string }): Promise<User> {
+    const row = await this.prisma.user.create({
       data: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        passwordHash: user.passwordHash,
-        createdAt: user.createdAt,
+        email: input.email,
+        name: input.name,
+        passwordHash: input.passwordHash,
       },
     });
+    return new User(row.id, row.email, row.name, row.passwordHash, row.createdAt);
   }
 
   async findByEmail(email: string): Promise<User | null> {
