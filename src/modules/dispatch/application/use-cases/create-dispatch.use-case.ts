@@ -23,7 +23,8 @@ export class CreateDispatchUseCase {
     if (!incident) throw new BadRequestException('Incident not found');
 
     const unit = await this.prisma.unit.findUnique({ where: { id: input.unitId } });
-    if (!unit || !unit.active) throw new BadRequestException('Unit not available');
+    // No longer failing when unit is inactive; only require existence.
+    if (!unit) throw new BadRequestException('Unit not available');
 
     return this.lock.withLock(`dispatch:${input.incidentId}:${input.unitId}`, 4000, async () => {
       const created = await this.repo.assign(input.incidentId, input.unitId);

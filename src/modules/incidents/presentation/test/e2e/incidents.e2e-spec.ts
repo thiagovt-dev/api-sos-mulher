@@ -146,7 +146,7 @@ describe('E2E: Incidents', () => {
     const token = login.body.access_token as string;
 
     // cria Unit direto no banco (evita depender de guard da rota /units)
-    const unit = await prisma.unit.create({ data: { name: 'U1', plate: 'GCM-01', active: true } });
+    const unit = await prisma.unit.create({ data: { name: 'U1', plate: `GCM-${Date.now()}`, active: true } });
 
     // cria incidente
     const inc = await request(server)

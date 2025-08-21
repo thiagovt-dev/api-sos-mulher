@@ -9,5 +9,6 @@
   "globalTeardown": "<rootDir>/test/jest-global-teardown.ts",
   "moduleNameMapper": {
     "^@/(.*)$": "<rootDir>/src/$1"
-  }
+  },
+  "maxWorkers": 1
 }

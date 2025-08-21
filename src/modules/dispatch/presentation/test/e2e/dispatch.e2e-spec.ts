@@ -74,7 +74,8 @@ describe('E2E: Unit -> Incident -> Dispatch', () => {
     const uRes = await request(server)
       .post('/api/units')
       .set('Authorization', `Bearer ${token}`)
-      .send({ name: 'GCM 01', plate: 'GCM-01', fcmToken: 'TESTE_PUSH' })
+      // Placa única por teste para evitar colisões entre suites paralelas
+      .send({ name: 'GCM 01', plate: `GCM-${Date.now()}`, fcmToken: 'TESTE_PUSH' })
       .expect(201);
     const unitId = uRes.body.id;
 
