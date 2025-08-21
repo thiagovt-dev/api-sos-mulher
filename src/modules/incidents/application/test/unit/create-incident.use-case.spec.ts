@@ -15,9 +15,23 @@ describe('CreateIncidentUseCase (unit)', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       })),
+      findById: jest.fn().mockImplementation(async (id) => ({
+        id,
+        code: 'INC-ABCDEF',
+        description: 'Sinal discreto',
+        lat: '-19.938',
+        lng: '-43.938',
+        address: 'Rua X, 123',
+        status: 'OPEN',
+        audioRoomId: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })),
     } as any;
 
-    const sut = new CreateIncidentUseCase(repo);
+    const gateway = { emitCreated: jest.fn() } as any;
+
+    const sut = new CreateIncidentUseCase(repo, gateway);
     const out = await sut.execute({
       lat: -19.938,
       lng: -43.938,
@@ -26,8 +40,10 @@ describe('CreateIncidentUseCase (unit)', () => {
     });
 
     expect(repo.create).toHaveBeenCalled();
-    expect(out.code).toMatch(/^INC-[0-9A-F]{6}$/);
-    expect(out.status).toBe('OPEN');
-    expect(out.address).toBe('Rua X, 123');
+    expect(repo.findById).toHaveBeenCalledWith('inc-1');
+    expect(out?.code).toMatch(/^INC-[0-9A-F]{6}$/);
+    expect(out?.status).toBe('OPEN');
+    expect(out?.address).toBe('Rua X, 123');
+    expect(gateway.emitCreated).toHaveBeenCalledWith(out);
   });
 });

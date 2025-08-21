@@ -5,6 +5,7 @@ class InMemoryUsersRepo implements UserRepository {
   private store = new Map<string, any>();
   async create(u: any) {
     this.store.set(u.id, u);
+    return u; 
   }
   async findByEmail(email: string) {
     for (const u of this.store.values()) if (u.email === email) return u;

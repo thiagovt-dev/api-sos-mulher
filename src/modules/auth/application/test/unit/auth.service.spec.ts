@@ -1,6 +1,11 @@
 import { AuthService } from '../../auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+
+jest.mock('bcrypt', () => ({
+  compare: jest.fn(),
+}));
+
 import * as bcrypt from 'bcrypt';
 
 describe('AuthService (unit)', () => {
@@ -46,8 +51,7 @@ describe('AuthService (unit)', () => {
       email: 'd@e.com',
       passwordHash: '$hash',
     });
-    const compareSpy = jest.spyOn(bcrypt, 'compare') as unknown as jest.SpyInstance<Promise<boolean>, any[]>;
-    compareSpy.mockResolvedValue(true);
+    (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
     const out = await sut.login({ email: 'd@e.com', password: 'senha123' });
 
@@ -57,8 +61,7 @@ describe('AuthService (unit)', () => {
 
   it('login: falha quando senha incorreta', async () => {
     users.findByEmail.mockResolvedValue({ id: 'u1', email: 'd@e.com', passwordHash: '$hash' });
-    const compareSpy = jest.spyOn(bcrypt, 'compare') as unknown as jest.SpyInstance<Promise<boolean>, any[]>;
-    compareSpy.mockResolvedValue(false);
+    (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
     await expect(sut.login({ email: 'd@e.com', password: 'errada' })).rejects.toBeInstanceOf(
       UnauthorizedException,
