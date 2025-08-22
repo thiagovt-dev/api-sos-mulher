@@ -77,7 +77,7 @@ describe('E2E: Unit -> Incident -> Dispatch', () => {
       // Placa única por teste para evitar colisões entre suites paralelas
       .send({ name: 'GCM 01', plate: `GCM-${Date.now()}`, fcmToken: 'TESTE_PUSH' })
       .expect(201);
-    const unitId = uRes.body.id;
+    const unitId = uRes.body.unitId ?? uRes.body.id;
 
     // 2) Incident
     const iRes = await request(server)

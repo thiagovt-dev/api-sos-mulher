@@ -11,6 +11,10 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { ApiProperty } from '@nestjs/swagger';
+import { AdminCreateUnitUseCase } from '../application/use-cases/admin-create-unit.use-case';
+import { Roles } from '@/shared/auth/roles.decorator';
+import { AdminUpdateUnitUseCase } from '../application/use-cases/admin-update-unit.use-case';
+import { AdminResetUnitPinUseCase } from '../application/use-cases/admin-reset-unit-pin.use-case';
 
 class CreateUnitDto {
   @ApiProperty({ example: 'Viatura Alfa', description: 'Nome da unidade' })
@@ -66,14 +70,27 @@ class UpdateTokenDto {
   token!: string;
 }
 
+class UpdateUnitDto {
+  name?: string;
+  plate?: string;
+  active?: boolean;
+}
+
+
 @ApiTags('Units')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 @Controller('units')
 export class UnitsController {
-  constructor(private readonly repo: PrismaUnitRepository) {}
+  constructor(
+    private readonly repo: PrismaUnitRepository,
+    private readonly createUnit: AdminCreateUnitUseCase,
+    private readonly updateUnit: AdminUpdateUnitUseCase,
+    private readonly resetPin: AdminResetUnitPinUseCase,
+  ) {}
 
   @Post()
+  @Roles('ADMIN')
   @ApiOperation({ summary: 'Criar unidade (viatura)' })
   @ApiBody({
     type: CreateUnitDto,
@@ -85,6 +102,8 @@ export class UnitsController {
           fcmToken: 'fcm_token_viatura',
           lat: -23.558,
           lng: -46.66,
+          username: 'gcm01',
+          pin: '654321',
         },
       },
     },
@@ -106,10 +125,35 @@ export class UnitsController {
     },
   })
   create(@Body() dto: CreateUnitDto) {
-    return this.repo.create(dto);
+    return this.createUnit.execute(dto);
+  }
+
+  @Patch(':id')
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Atualizar dados da unidade' })
+  @ApiParam({ name: 'id', description: 'ID da unidade (UUID do usuário POLICE)' })
+  @ApiBody({
+    type: UpdateUnitDto,
+    examples: {
+      default: { value: { name: 'Viatura Bravo', plate: 'ABC-5678', active: true } },
+    },
+  })
+  @ApiOkResponse({ description: 'Unidade atualizada' })
+  update(@Param('id') id: string, @Body() dto: UpdateUnitDto) {
+    return this.updateUnit.execute(id, dto);
+  }
+
+  @Post(':id/reset-pin')
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Redefinir PIN da unidade (gera novo PIN)' })
+  @ApiParam({ name: 'id', description: 'ID da unidade (UUID do usuário POLICE)' })
+  @ApiOkResponse({ description: 'PIN redefinido', schema: { example: { unitId: '...', pin: '123456' } } })
+  reset(@Param('id') id: string) {
+    return this.resetPin.execute(id);
   }
 
   @Get()
+  @Roles('POLICE', 'ADMIN')
   @ApiOperation({ summary: 'Listar unidades ativas' })
   @ApiOkResponse({
     description: 'Lista de unidades',
@@ -135,6 +179,7 @@ export class UnitsController {
   }
 
   @Patch(':id/token')
+  @Roles('POLICE', 'ADMIN')
   @ApiOperation({ summary: 'Atualizar token FCM da unidade' })
   @ApiParam({
     name: 'id',
