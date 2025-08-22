@@ -40,6 +40,24 @@ class CreateUnitDto {
   @IsOptional()
   @IsLongitude()
   lng?: number;
+
+  @ApiProperty({
+    example: 'gcm01',
+    required: false,
+    description: 'Username para login da viatura (polícia)'
+  })
+  @IsOptional()
+  @IsString()
+  username?: string;
+
+  @ApiProperty({
+    example: '654321',
+    required: false,
+    description: 'PIN numérico para login da viatura (será hasheado)'
+  })
+  @IsOptional()
+  @IsString()
+  pin?: string;
 }
 
 class UpdateTokenDto {

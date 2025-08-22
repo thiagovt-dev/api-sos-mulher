@@ -7,8 +7,9 @@ export abstract class UserRepository {
    */
   abstract create(input: {
     email: string;
-    name: string;
     passwordHash: string;
+    roles?: ('CITIZEN' | 'POLICE' | 'ADMIN')[];
+    username?: string | null;
   }): Promise<User>;
 
   abstract findByEmail(email: string): Promise<User | null>;

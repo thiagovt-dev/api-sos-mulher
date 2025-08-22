@@ -67,7 +67,7 @@ describe('E2E: Unit -> Incident -> Dispatch', () => {
 
     // auth
     const email = `flow-${Date.now()}@sos.com`;
-    await request(server).post('/api/auth/register').send({ email, name: 'Flow', password: 'secret123' }).expect(201);
+    await request(server).post('/api/auth/register').send({ email, password: 'secret123' }).expect(201);
     const login = await request(server).post('/api/auth/login').send({ email, password: 'secret123' }).expect(200);
     token = login.body.access_token;
 

@@ -3,13 +3,13 @@ import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-async function upsertPoliceUnit(params: { username: string; name: string; plate?: string; fcmToken?: string; pin?: string }) {
-  const { username, name, plate, fcmToken, pin = '123456' } = params;
+async function upsertPoliceUnit(params: { username: string; name: string; plate?: string; fcmToken?: string; pin?: string; email?: string }) {
+  const { username, name, plate, fcmToken, pin = '123456', email = `${username}@example.com` } = params;
   const passwordHash = await bcrypt.hash(pin, 10);
   const user = await prisma.user.upsert({
     where: { username },
     update: {},
-    create: { username, passwordHash, roles: { set: ['POLICE'] } },
+    create: { username, email, passwordHash, roles: { set: ['POLICE'] } },
   });
   const unit = await prisma.unit.upsert({
     where: { id: user.id },
@@ -20,7 +20,7 @@ async function upsertPoliceUnit(params: { username: string; name: string; plate?
 }
 
 async function upsertAdmin(params: { username: string; password?: string; email?: string }) {
-  const { username, password = 'admin123', email } = params;
+  const { username, password = 'admin123', email = `${username}@example.com` } = params;
   const passwordHash = await bcrypt.hash(password, 10);
   const admin = await prisma.user.upsert({
     where: { username },
@@ -39,7 +39,7 @@ async function upsertCitizen(params: {
     street: string; number: string; district: string; city: string; state: string; zip: string;
   }>;
 }) {
-  const { username, password = '123456', email, phone, address = {} } = params;
+  const { username, password = '123456', email = `${username}@example.com`, phone, address = {} } = params;
   const passwordHash = await bcrypt.hash(password, 10);
   const user = await prisma.user.upsert({
     where: { username },

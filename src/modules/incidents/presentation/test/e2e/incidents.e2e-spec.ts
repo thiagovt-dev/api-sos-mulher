@@ -36,10 +36,7 @@ describe('E2E: Incidents', () => {
 
     // auth
     const email = `inc-${Date.now()}@sos.com`;
-    await request(server)
-      .post('/api/auth/register')
-      .send({ email, name: 'Inc', password: 'secret123' })
-      .expect(201);
+    await request(server).post('/api/auth/register').send({ email, password: 'secret123' }).expect(201);
     const login = await request(server)
       .post('/api/auth/login')
       .send({ email, password: 'secret123' })
@@ -89,10 +86,7 @@ describe('E2E: Incidents', () => {
 
     // auth próprio deste teste
     const email = `close-${Date.now()}@sos.com`;
-    await request(server)
-      .post('/api/auth/register')
-      .send({ email, name: 'Closer', password: 'secret123' })
-      .expect(201);
+    await request(server).post('/api/auth/register').send({ email, password: 'secret123' }).expect(201);
     const login = await request(server)
       .post('/api/auth/login')
       .send({ email, password: 'secret123' })
@@ -135,10 +129,7 @@ describe('E2E: Incidents', () => {
 
     // auth próprio deste teste
     const email = `accept-${Date.now()}@sos.com`;
-    await request(server)
-      .post('/api/auth/register')
-      .send({ email, name: 'Acc', password: 'secret123' })
-      .expect(201);
+    await request(server).post('/api/auth/register').send({ email, password: 'secret123' }).expect(201);
     const login = await request(server)
       .post('/api/auth/login')
       .send({ email, password: 'secret123' })
@@ -146,7 +137,8 @@ describe('E2E: Incidents', () => {
     const token = login.body.access_token as string;
 
     // cria Unit direto no banco (evita depender de guard da rota /units)
-    const unit = await prisma.unit.create({ data: { name: 'U1', plate: `GCM-${Date.now()}`, active: true } });
+    const uUser = await prisma.user.create({ data: { username: 'u1', roles: { set: ['POLICE'] } } });
+    const unit = await prisma.unit.create({ data: { id: uUser.id, name: 'U1', plate: `GCM-${Date.now()}`, active: true } });
 
     // cria incidente
     const inc = await request(server)

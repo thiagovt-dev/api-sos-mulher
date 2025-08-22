@@ -9,6 +9,7 @@ import { JwtStrategy } from '../infra/strategies/jwt.strategy';
 import { PrismaUserRepository } from '@/modules/users/infra/repositories/prisma-user.repository';
 import { UsersModule } from '@/modules/users/presentation/users.module';
 import { CreateUserUseCase } from '@/modules/users/application/use-cases/create-user.use-case';
+import { PoliceLoginUseCase } from '../application/use-cases/police-login.use-case';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { CreateUserUseCase } from '@/modules/users/application/use-cases/create-
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, PrismaClient, PrismaUserRepository, CreateUserUseCase],
+  providers: [AuthService, JwtStrategy, PrismaClient, PrismaUserRepository, CreateUserUseCase, PoliceLoginUseCase],
   exports: [JwtModule, PassportModule, AuthService],
 })
 export class AuthModule {}

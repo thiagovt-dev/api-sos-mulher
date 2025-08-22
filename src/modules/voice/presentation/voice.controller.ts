@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '@/modules/auth/infra/guard/jwt.guard';
 import { CloseIncidentRoomUseCase } from '../application/use-cases/close-incident-room.use-case';
 import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiProperty } from '@nestjs/swagger';
+import { Roles } from '@/shared/auth/roles.decorator';
 
 class JoinDto {
   @ApiProperty({ example: 'c1f20143-1f7d-4a8b-908f-3f0f6efb0f9a', description: 'ID do incidente' })
@@ -34,6 +35,7 @@ class CloseDto {
 
 @Controller('voice')
 @UseGuards(JwtAuthGuard)
+@Roles('POLICE', 'CITIZEN', 'ADMIN')
 @ApiBearerAuth()
 @ApiTags('Voice')
 export class VoiceController {
@@ -84,8 +86,7 @@ export class VoiceController {
       example: {
         url: 'wss://livekit.example.com',
         roomName: 'inc_INC-1A2B3C',
-        token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-          ,
+        token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
         identity: 'unit:unit-123',
         mode: 'PTT',
       },

@@ -11,6 +11,8 @@ import { BullmqModule } from './infra/queue';
 import { UnitsModule } from './modules/units/presentation/units.module';
 import { DebugModule } from './modules/debug/debug.module';
 import { VoiceModule } from './modules/voice/presentation/voice.module';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from './shared/auth/roles.guard';
 
 const isTest = process.env.NODE_ENV === 'test';
 
@@ -26,7 +28,8 @@ const isTest = process.env.NODE_ENV === 'test';
     DispatchModule,
     UnitsModule,
     VoiceModule,
-    DebugModule
+    DebugModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: RolesGuard }],
 })
 export class AppModule {}

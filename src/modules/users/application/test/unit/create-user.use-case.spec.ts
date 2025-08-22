@@ -21,27 +21,17 @@ describe('CreateUserUseCase (unit)', () => {
     const repo = new InMemoryUsersRepo();
     const useCase = new CreateUserUseCase(repo as any);
 
-    const out = await useCase.execute({
-      email: 'jane@sos.com',
-      name: 'Jane',
-      password: 'secret123',
-    });
+    const out = await useCase.execute({ email: 'jane@sos.com', password: 'secret123' });
 
     expect(out).toHaveProperty('id');
-    expect(out).toMatchObject({ email: 'jane@sos.com', name: 'Jane' });
+    expect(out).toMatchObject({ email: 'jane@sos.com' });
   });
 
   it('recusa email duplicado', async () => {
     const repo = new InMemoryUsersRepo();
     const useCase = new CreateUserUseCase(repo as any);
 
-    await useCase.execute({
-      email: 'dup@sos.com',
-      name: 'John',
-      password: 'x',
-    });
-    await expect(
-      useCase.execute({ email: 'dup@sos.com', name: 'Mary', password: 'y' }),
-    ).rejects.toThrow(/E-mail já cadastrado/i);
+    await useCase.execute({ email: 'dup@sos.com', password: 'x' });
+    await expect(useCase.execute({ email: 'dup@sos.com', password: 'y' })).rejects.toThrow(/E-mail já cadastrado/i);
   });
 });

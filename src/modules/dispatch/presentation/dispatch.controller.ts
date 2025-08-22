@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '@/modules/auth/infra/guard/jwt.guard';
 import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiProperty } from '@nestjs/swagger';
 import { AcceptDispatchUseCase } from '../application/use-cases/accept-dispatch.use-case';
+import { Roles } from '@/shared/auth/roles.decorator';
 
 class CreateDispatchDto {
   @ApiProperty({ example: 'c1f20143-1f7d-4a8b-908f-3f0f6efb0f9a', description: 'ID do incidente' })
@@ -30,6 +31,7 @@ export class DispatchController {
   ) {}
 
   @Post()
+  @Roles('POLICE', 'ADMIN')
   @ApiOperation({ summary: 'Designar uma unidade para um incidente' })
   @ApiBody({
     type: CreateDispatchDto,
@@ -62,6 +64,7 @@ export class DispatchController {
   }
 
   @Post(':id/accept')
+  @Roles('POLICE', 'ADMIN')
   @ApiOperation({ summary: 'Aceitar o despacho de uma unidade para um incidente' })
   @ApiOkResponse({
     description: 'Despacho aceito',
