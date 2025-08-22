@@ -1,7 +1,7 @@
 import { PrismaUserRepository } from '@/modules/users/infra/repositories/prisma-user.repository';
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { CreateUserUseCase } from '@/modules/users/application/use-cases/create-user.use-case';
 
 @Injectable()

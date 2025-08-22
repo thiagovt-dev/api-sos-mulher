@@ -6,7 +6,7 @@ jest.mock('bcrypt', () => ({
   compare: jest.fn(),
 }));
 
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 describe('AuthService (unit)', () => {
   const users = {

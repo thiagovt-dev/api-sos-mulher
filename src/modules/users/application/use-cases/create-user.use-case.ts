@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { CreateUserDto } from '../dto/create-user.dto';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class CreateUserUseCase {

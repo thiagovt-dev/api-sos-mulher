@@ -7,13 +7,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  CITIZEN
+  POLICE
+  ADMIN
+}
+
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  name         String
-  passwordHash String
-  createdAt    DateTime @default(now())
-  Device       Device[]
+  id           String  @id @default(uuid())
+  email        String? @unique
+  username     String? @unique
+  passwordHash String?
+  roles        Role[]
+
+  unit    Unit?
+  citizen CitizenProfile?
+
+  devices Device[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum IncidentStatus {
@@ -60,37 +73,56 @@ model Incident {
 }
 
 model Unit {
-  id         String    @id @default(uuid())
-  name       String
-  plate      String?   @unique
-  active     Boolean   @default(true)
-  fcmToken   String? // token do app da viatura
-  lastLat    Decimal?  @db.Decimal(9, 6)
-  lastLng    Decimal?  @db.Decimal(9, 6)
+  id   String @id
+  user User   @relation(fields: [id], references: [id])
+
+  name   String
+  plate  String?
+  active Boolean @default(true)
+
+  fcmToken   String?
+  lastLat    Decimal?
+  lastLng    Decimal?
   lastSeenAt DateTime?
 
-  dispatches Dispatch[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  Device     Device[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  Dispatch  Dispatch[]
+  Device    Device[]
+}
 
-  @@index([active])
+model CitizenProfile {
+  userId String @id
+  user   User   @relation(fields: [userId], references: [id])
+
+  phone    String
+  street   String?
+  number   String?
+  district String?
+  city     String?
+  state    String?
+  zip      String?
+  lat      Decimal?
+  lng      Decimal?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Dispatch {
-  id         String         @id @default(uuid())
+  id         String @id @default(uuid())
   incidentId String
-  unitId     String
+  unitId     String //User.id (POLICE)
+
+  incident Incident @relation(fields: [incidentId], references: [id])
+  unit     Unit     @relation(fields: [unitId], references: [id])
+
   status     DispatchStatus @default(PENDING)
   notifiedAt DateTime?
   acceptedAt DateTime?
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
 
-  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
-  unit     Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
-
-  @@unique([incidentId, unitId])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model IncidentEvent {
