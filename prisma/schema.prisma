@@ -7,13 +7,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  CITIZEN
+  POLICE
+  ADMIN
+}
+
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  name         String
-  passwordHash String
-  createdAt    DateTime @default(now())
-  Device       Device[]
+  id           String  @id @default(uuid())
+  email        String? @unique
+  username     String? @unique
+  passwordHash String?
+  roles        Role[]
+
+  unit    Unit?
+  citizen CitizenProfile?
+
+  devices Device[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  incidents      Incident[]       @relation("CitizenIncidents")
+  LocationSample LocationSample[]
 }
 
 enum IncidentStatus {
@@ -37,58 +53,91 @@ enum IncidentEventType {
   PUSH_SENT
   UNIT_ACCEPTED
   STATUS_CHANGED
+
+  VOICE_JOINED // novo
+  VOICE_LEFT // novo
+
+  VOICE_JOIN_ISSUED // legado
+  VOICE_ROOM_CLOSED // legado
 }
 
 model Incident {
   id          String         @id @default(uuid())
   code        String         @unique
-  description String? // opcional (MVP)
+  description String?
   lat         Decimal        @db.Decimal(9, 6)
   lng         Decimal        @db.Decimal(9, 6)
   address     String?
   status      IncidentStatus @default(OPEN)
-  audioRoomId String? // reservado para Sprint 3 (voz)
+  audioRoomId String?
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
-  dispatches Dispatch[]
-  events     IncidentEvent[]
+  citizenId String?
+  citizen   User?   @relation("CitizenIncidents", fields: [citizenId], references: [id])
+
+  dispatches     Dispatch[]
+  events         IncidentEvent[]
+  LocationSample LocationSample[]
 
   @@index([status, createdAt])
 }
 
 model Unit {
-  id         String    @id @default(uuid())
-  name       String
-  plate      String?   @unique
-  active     Boolean   @default(true)
-  fcmToken   String? // token do app da viatura
+  id   String @id
+  user User   @relation(fields: [id], references: [id])
+
+  name   String
+  plate  String?
+  active Boolean @default(true)
+
+  fcmToken   String?
   lastLat    Decimal?  @db.Decimal(9, 6)
   lastLng    Decimal?  @db.Decimal(9, 6)
   lastSeenAt DateTime?
 
-  dispatches Dispatch[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  Device     Device[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  Dispatch       Dispatch[]
+  Device         Device[]
+  LocationSample LocationSample[]
+}
 
-  @@index([active])
+model CitizenProfile {
+  userId String @id
+  user   User   @relation(fields: [userId], references: [id])
+
+  name     String?
+  phone    String
+  street   String?
+  number   String?
+  district String?
+  city     String?
+  state    String?
+  zip      String?
+  lat      Decimal? @db.Decimal(9, 6)
+  lng      Decimal? @db.Decimal(9, 6)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Dispatch {
-  id         String         @id @default(uuid())
+  id         String @id @default(uuid())
   incidentId String
-  unitId     String
+  unitId     String // User.id (POLICE)
+
+  incident Incident @relation(fields: [incidentId], references: [id])
+  unit     Unit     @relation(fields: [unitId], references: [id])
+
   status     DispatchStatus @default(PENDING)
   notifiedAt DateTime?
   acceptedAt DateTime?
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
 
-  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
-  unit     Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@unique([incidentId, unitId])
+  @@index([incidentId, unitId, status])
 }
 
 model IncidentEvent {
@@ -127,4 +176,35 @@ model Device {
 
   @@index([unitId])
   @@index([userId])
+}
+
+enum LocationSource {
+  MOBILE
+  WEB
+}
+
+model LocationSample {
+  id         String  @id @default(uuid())
+  userId     String
+  unitId     String?
+  incidentId String?
+
+  lat      Decimal  @db.Decimal(9, 6)
+  lng      Decimal  @db.Decimal(9, 6)
+  accuracy Decimal? @db.Decimal(6, 2) // em metros
+  speed    Decimal? @db.Decimal(6, 2) // m/s
+  heading  Decimal? @db.Decimal(6, 2) // graus 0-360
+
+  source     LocationSource @default(MOBILE)
+  recordedAt DateTime       @default(now())
+  createdAt  DateTime       @default(now())
+
+  // relações (todas opcionais para flexibilidade)
+  user     User      @relation(fields: [userId], references: [id])
+  unit     Unit?     @relation(fields: [unitId], references: [id])
+  incident Incident? @relation(fields: [incidentId], references: [id])
+
+  @@index([userId, recordedAt])
+  @@index([unitId, recordedAt])
+  @@index([incidentId, recordedAt])
 }

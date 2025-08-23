@@ -12,7 +12,10 @@ describe('API e2e (Fastify + /api prefix)', () => {
   });
 
   beforeEach(async () => {
-    await prisma.user.deleteMany({});
+    await prisma.$executeRawUnsafe(`
+      TRUNCATE TABLE "Dispatch","IncidentEvent","Incident","Device","CitizenProfile","Unit","User"
+      RESTART IDENTITY CASCADE;
+    `);
   });
 
   afterAll(async () => {
@@ -26,35 +29,33 @@ describe('API e2e (Fastify + /api prefix)', () => {
     expect(res.body).toEqual({ status: 'ok' });
   });
 
-  it('POST /api/users cria usuário e retorna 201 com id/email/name', async () => {
+  it('POST /api/auth/register → 201 {access_token} e GET /api/users/:id com JWT', async () => {
     const server = app.getHttpServer();
 
     const payload = {
       email: `dev-${Date.now()}@sos.com`,
-      name: 'Dev Tester',
       password: 'secret123',
     };
 
     const res = await request(server)
-      .post('/api/users')
+      .post('/api/auth/register')
       .send(payload)
       .expect(201);
+    expect(res.body).toHaveProperty('access_token');
 
-    expect(res.body).toHaveProperty('id');
-    expect(res.body).toMatchObject({
-      email: payload.email,
-      name: payload.name,
-    });
-    expect(res.body).not.toHaveProperty('password');
-    expect(res.body).not.toHaveProperty('passwordHash');
+    // login para obter token e id
+    const login = await request(server)
+      .post('/api/auth/login')
+      .send({ email: payload.email, password: payload.password })
+      .expect(200);
+    const token = login.body.access_token as string;
+    const id = login.body.user.id as string;
 
-    const id = res.body.id as string;
-    const resGet = await request(server).get(`/api/users/${id}`).expect(200);
-    expect(resGet.body).toMatchObject({
-      id,
-      email: payload.email,
-      name: payload.name,
-    });
+    const resGet = await request(server)
+      .get(`/api/users/${id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(resGet.body).toMatchObject({ id, email: payload.email });
   });
 
   it('POST /api/users com e-mail duplicado → 400', async () => {
@@ -62,15 +63,14 @@ describe('API e2e (Fastify + /api prefix)', () => {
 
     const email = `dup-${Date.now()}@sos.com`;
     await request(server)
-      .post('/api/users')
-      .send({ email, name: 'A', password: 'secret123' })
+      .post('/api/auth/register')
+      .send({ email, password: 'secret123' })
       .expect(201);
 
     const res = await request(server)
-      .post('/api/users')
-      .send({ email, name: 'B', password: 'secret123' })
+      .post('/api/auth/register')
+      .send({ email, password: 'secret123' })
       .expect(400);
-
-    expect(res.body.message).toMatch(/E-mail já cadastrado/i);
+    expect(res.body.message).toMatch(/already in use|cadastrado/i);
   });
 });

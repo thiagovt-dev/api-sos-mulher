@@ -2,11 +2,11 @@ import { AuthService } from '../../auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 
-jest.mock('bcrypt', () => ({
+jest.mock('bcryptjs', () => ({
   compare: jest.fn(),
 }));
 
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 describe('AuthService (unit)', () => {
   const users = {
@@ -25,38 +25,33 @@ describe('AuthService (unit)', () => {
   });
 
   it('register: delega ao CreateUserUseCase e retorna dados públicos', async () => {
-    createUser.execute.mockResolvedValue({ id: 'u1', name: 'Disp', email: 'd@e.com' });
+    createUser.execute.mockResolvedValue({ id: 'u1', email: 'd@e.com' });
 
-    const out = await sut.register({ name: 'Disp', email: 'd@e.com', password: 'senha123' });
+    const out = await sut.register({ email: 'd@e.com', password: 'senha123' });
 
     expect(createUser.execute).toHaveBeenCalledWith({
-      name: 'Disp',
       email: 'd@e.com',
       password: 'senha123',
     });
-    expect(out).toEqual({ id: 'u1', name: 'Disp', email: 'd@e.com' });
+    expect(out).toEqual({ id: 'u1', email: 'd@e.com' });
   });
 
   it('register: recusa email duplicado', async () => {
     createUser.execute.mockRejectedValue(new BadRequestException('E-mail já cadastrado'));
-    await expect(
-      sut.register({ name: 'X', email: 'ja@existe.com', password: '123456' }),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    await expect(sut.register({ email: 'ja@existe.com', password: '123456' })).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
   });
 
   it('login: retorna token quando credenciais ok', async () => {
-    users.findByEmail.mockResolvedValue({
-      id: 'u1',
-      name: 'Disp',
-      email: 'd@e.com',
-      passwordHash: '$hash',
-    });
+    users.findByEmail.mockResolvedValue({ id: 'u1', email: 'd@e.com', passwordHash: '$hash', roles: [] });
     (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
     const out = await sut.login({ email: 'd@e.com', password: 'senha123' });
 
     expect(out.access_token).toBe('token123');
-    expect(out.user).toEqual({ id: 'u1', name: 'Disp', email: 'd@e.com' });
+    // Roles podem ser incluídos no retorno atual; validamos campos principais
+    expect(out.user).toMatchObject({ id: 'u1', email: 'd@e.com' });
   });
 
   it('login: falha quando senha incorreta', async () => {

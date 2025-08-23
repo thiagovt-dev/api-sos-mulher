@@ -1,6 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-
-// Carrega .env.test se existir
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -13,10 +11,7 @@ function loadDotEnvTest() {
       if (m) {
         const k = m[1].trim();
         let v = m[2].trim();
-        if (
-          (v.startsWith('"') && v.endsWith('"')) ||
-          (v.startsWith("'") && v.endsWith("'"))
-        ) {
+        if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
           v = v.slice(1, -1);
         }
         process.env[k] = v;
@@ -29,18 +24,29 @@ module.exports = async () => {
   process.env.NODE_ENV = 'test';
   loadDotEnvTest();
 
-  // Garante que o DB de teste exista e está migrado
-  // Recomendado: já ter criado as migrations (init) antes.
-  // Aqui aplicamos migrations no banco de teste.
-  const { execSync } = await import('node:child_process');
+  // Ensure LiveKit defaults for CI to avoid missing env errors
+  if (!process.env.LIVEKIT_URL) process.env.LIVEKIT_URL = 'wss://test.local';
+  if (!process.env.LIVEKIT_API_KEY) process.env.LIVEKIT_API_KEY = 'test_key';
+  if (!process.env.LIVEKIT_API_SECRET) process.env.LIVEKIT_API_SECRET = 'test_secret';
 
-  // Aplica migrations no DB de teste sem interativo
+  const { execSync } = await import('node:child_process');
   execSync('bunx prisma migrate deploy', { stdio: 'inherit' });
 
   const prisma = new PrismaClient();
   try {
     await prisma.$connect();
-    await prisma.user.deleteMany({});
+
+    // 🔧 Limpa em ordem segura (ou com CASCADE) para evitar FK error (Unit -> User)
+    await prisma.$executeRawUnsafe(`
+      TRUNCATE TABLE
+        "Dispatch",
+        "IncidentEvent",
+        "Device",
+        "Incident",
+        "Unit",
+        "User"
+      RESTART IDENTITY CASCADE;
+    `);
   } finally {
     await prisma.$disconnect();
   }

@@ -5,7 +5,6 @@ import { Queue } from 'bullmq';
 import { PrismaDispatchRepository } from '../../infra/repositories/prisma-dispatch.repository';
 import { PUSH_QUEUE } from '@/infra/queue/tokens';
 import { RedlockService } from '@/shared/locks/redlock.service';
-import { PrismaDeviceRepository } from '@/modules/devices/infra/prisma-device.repository';
 
 @Injectable()
 export class CreateDispatchUseCase {
@@ -15,7 +14,6 @@ export class CreateDispatchUseCase {
     private readonly prisma: PrismaClient,
     private readonly gateway: IncidentsGateway,
     @Inject(PUSH_QUEUE) private readonly pushQueue: Queue,
-    private readonly devices: PrismaDeviceRepository,
   ) {}
 
   async execute(input: { incidentId: string; unitId: string }) {

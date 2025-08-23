@@ -7,9 +7,13 @@ import { IncidentsModule } from './modules/incidents/presentation/incidents.modu
 import { DispatchModule } from './modules/dispatch/presentation/dispatch.module';
 import { AuthModule } from './modules/auth/presentation/auth.module';
 import appConfig from './config/app.config';
-import { BullmqModule } from './infra/queue/bullmq.module';
+import { BullmqModule } from './infra/queue';
 import { UnitsModule } from './modules/units/presentation/units.module';
 import { DebugModule } from './modules/debug/debug.module';
+import { VoiceModule } from './modules/voice/presentation/voice.module';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from './shared/auth/roles.guard';
+import { LocationModule } from './modules/location/presentation/location.module';
 
 const isTest = process.env.NODE_ENV === 'test';
 
@@ -24,7 +28,10 @@ const isTest = process.env.NODE_ENV === 'test';
     IncidentsModule,
     DispatchModule,
     UnitsModule,
-    DebugModule
+    VoiceModule,
+    LocationModule,
+    DebugModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: RolesGuard }],
 })
 export class AppModule {}

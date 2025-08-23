@@ -6,6 +6,7 @@ import { JwtAuthGuard } from '@/modules/auth/infra/guard/jwt.guard';
 import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiProperty } from '@nestjs/swagger';
 import { CloseIncidentUseCase } from '../application/use-cases/close-incident.use-case';
+import { Roles } from '@/shared/auth/roles.decorator';
 
 class CreateIncidentDto {
   @ApiProperty({ example: -23.55052, description: 'Latitude do local do incidente' })
@@ -43,6 +44,7 @@ export class IncidentsController {
   ) {}
 
   @Post()
+  @Roles('CITIZEN', 'ADMIN')
   @ApiOperation({ summary: 'Criar incidente' })
   @ApiBody({
     type: CreateIncidentDto,
@@ -78,6 +80,7 @@ export class IncidentsController {
   }
 
   @Get()
+  @Roles('POLICE', 'ADMIN')
   @ApiOperation({ summary: 'Listar incidentes em aberto' })
   @ApiOkResponse({
     description: 'Lista de incidentes',

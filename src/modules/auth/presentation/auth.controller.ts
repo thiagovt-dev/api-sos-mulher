@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from '../application/auth.service';
-import { RegisterDto } from '../application/dto/register.dto';
+import { RegisterCitizenDto } from '../application/dto/register-citizen.dto';
 import { LoginDto } from '../application/dto/login.dto';
 import { JwtAuthGuard } from '../infra/guard/jwt.guard';
 import {
@@ -11,53 +11,69 @@ import {
   ApiTags,
   ApiCreatedResponse,
 } from '@nestjs/swagger';
+import { PoliceLoginUseCase } from '../application/use-cases/police-login.use-case';
+import { RegisterCitizenUseCase } from '@/modules/users/application/use-cases/register-citizen.use-case';
 
-class RegisterResponseDto {
-  id!: string;
-  name!: string;
-  email!: string;
-}
+class RegisterResponseDto { id!: string; email!: string }
 
-class LoginResponseUserDto {
-  id!: string;
-  name!: string;
-  email!: string;
-}
+// Usamos RegisterDto com validação (@IsEmail, @MinLength)
+
+class LoginResponseUserDto { id!: string; email!: string; roles?: string[] }
 
 class LoginResponseDto {
   access_token!: string;
   user!: LoginResponseUserDto;
 }
 
+class PoliceLoginDto {
+  login!: string;
+  pin!: string;
+}
+
+
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly policeLogin: PoliceLoginUseCase,
+    private readonly registerCitizen: RegisterCitizenUseCase,
+  ) {}
 
   @Post('register')
   @ApiOperation({ summary: 'Cadastro de usuário' })
   @ApiBody({
-    type: RegisterDto,
+    type: RegisterCitizenDto,
     examples: {
       exemplo: {
         summary: 'Cadastro simples',
-        value: { name: 'Maria Silva', email: 'maria@example.com', password: 'minhasenha123' },
+        value: {
+          email: 'maria@example.com',
+          password: 'minhasenha123',
+          name: 'Maria da Silva',
+          phone: '+55 11 99999-0000',
+          street: 'Rua A',
+          number: '123',
+          district: 'Centro',
+          city: 'São Paulo',
+          state: 'SP',
+          zip: '12345-678',
+          lat: -23.55052,
+          lng: -46.633308,
+        },
       },
     },
   })
   @ApiCreatedResponse({
-    description: 'Usuário criado com sucesso',
-    type: RegisterResponseDto,
+    description: 'Usuário criado com sucesso (retorna token JWT)',
     schema: {
       example: {
-        id: 'b6f7c1d2-5a0e-4b21-9a3f-1e2d3c4b5a6f',
-        name: 'Maria Silva',
-        email: 'maria@example.com',
+        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
       },
     },
   })
-  async register(@Body() dto: RegisterDto) {
-    return this.auth.register(dto);
+  async register(@Body() dto: RegisterCitizenDto) {
+    return this.registerCitizen.execute(dto);
   }
 
   @HttpCode(200)
@@ -79,8 +95,8 @@ export class AuthController {
         access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
         user: {
           id: 'b6f7c1d2-5a0e-4b21-9a3f-1e2d3c4b5a6f',
-          name: 'Maria Silva',
           email: 'maria@example.com',
+          roles: ['CITIZEN'],
         },
       },
     },
@@ -104,5 +120,21 @@ export class AuthController {
   })
   me(@Req() req: any) {
     return { ok: true, user: req.user };
+  }
+
+  @Post('police/login')
+  @ApiOperation({ summary: 'Login de policial por username + PIN' })
+  @ApiBody({
+    type: PoliceLoginDto,
+    examples: {
+      default: { value: { login: 'gcm01', pin: '654321' } },
+    },
+  })
+  @ApiOkResponse({
+    description: 'Token JWT emitido para policial',
+    schema: { example: { access_token: 'eyJhbGciOi...' } },
+  })
+  police(@Body() dto: PoliceLoginDto) {
+    return this.policeLogin.execute({ login: dto.login, pin: dto.pin });
   }
 }

@@ -6,7 +6,7 @@ import { PrismaDispatchRepository } from '../infra/repositories/prisma-dispatch.
 import { CreateDispatchUseCase } from '../application/use-cases/create-dispatch.use-case';
 import { RedlockService } from '@/shared/locks/redlock.service';
 import { FcmService } from '@/shared/notifications/fcm.service';
-import { BullmqModule } from '@/infra/queue/bullmq.module';
+import { BullmqModule } from '@/infra/queue';
 import { DevicesModule } from '@/modules/devices/presentation/devices.module';
 import { AcceptDispatchUseCase } from '../application/use-cases/accept-dispatch.use-case';
 

@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { CreateUserDto } from '../dto/create-user.dto';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class CreateUserUseCase {
@@ -14,9 +14,9 @@ export class CreateUserUseCase {
     const passwordHash = await bcrypt.hash(input.password, 10);
     const user = await this.users.create({
       email: input.email,
-      name: input.name,
       passwordHash,
+      roles: ['CITIZEN'],
     });
-    return { id: user.id, email: user.email, name: user.name };
+    return { id: user.id, email: user.email };
   }
 }
