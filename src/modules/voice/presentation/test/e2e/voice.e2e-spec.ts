@@ -67,6 +67,14 @@ describe('E2E: Voice module', () => {
       .expect(200);
     const adminToken = adminLogin.body.access_token as string;
 
+    // Leave room as citizen
+    const leave = await request(server)
+      .post('/api/voice/leave')
+      .set('Authorization', `Bearer ${citizenToken}`)
+      .send({ incidentId, name: 'Vítima' })
+      .expect(201);
+    expect(leave.body).toEqual({ ok: true });
+
     // Close room as admin
     const close = await request(server)
       .post('/api/voice/close')
@@ -78,6 +86,7 @@ describe('E2E: Voice module', () => {
     // Check events
     const events = await prisma.incidentEvent.findMany({ where: { incidentId } });
     expect(events.some((e) => e.type === 'VOICE_JOINED')).toBe(true);
+    expect(events.some((e) => e.type === 'VOICE_LEFT')).toBe(true);
     expect(events.some((e) => e.type === 'VOICE_ROOM_CLOSED')).toBe(true);
   });
 });

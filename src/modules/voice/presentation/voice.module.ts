@@ -9,6 +9,7 @@ import { VoiceAccessService } from '../application/services/voice-access.service
 import { AudioRoomService } from '../application/services/audio-room.service';
 import { IdentityService } from '../application/services/identity.service';
 import { IncidentEventLogger } from '../application/services/incident-event-logger.service';
+import { LeaveIncidentRoomUseCase } from '../application/use-cases/leave-incident-room.use-case';
 
 
 @Module({
@@ -17,6 +18,7 @@ import { IncidentEventLogger } from '../application/services/incident-event-logg
     PrismaClient,
     JoinIncidentRoomUseCase,
     CloseIncidentRoomUseCase,
+    LeaveIncidentRoomUseCase,
     VoiceAccessService,
     AudioRoomService,
     IdentityService,

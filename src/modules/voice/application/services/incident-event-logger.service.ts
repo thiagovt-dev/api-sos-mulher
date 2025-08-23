@@ -15,4 +15,10 @@ export class IncidentEventLogger {
       },
     });
   }
+
+  async voiceLeft(incidentId: string, identity: string, role: AppRole) {
+    await this.prisma.incidentEvent.create({
+      data: { incidentId, type: IncidentEventType.VOICE_LEFT, payload: { identity, role } as any },
+    });
+  }
 }
