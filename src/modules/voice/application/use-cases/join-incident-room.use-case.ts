@@ -1,66 +1,45 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { PrismaClient, IncidentEventType } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { LivekitAuthPort } from '../../domain/livekit-auth.port';
+import { AudioRoomService } from '../services/audio-room.service';
+import { IdentityService } from '../services/identity.service';
+import { IncidentEventLogger } from '../services/incident-event-logger.service';
+import { VoiceAccessService } from '../services/voice-access.service';
+import { CurrentUser, VoiceMode } from '../types/type';
 
-type JoinInput = {
-  incidentId: string;
-  participantType: 'UNIT' | 'DISPATCHER' | 'VICTIM';
-  participantId?: string;
-  mode: 'PTT' | 'FULL' | 'LISTEN';
-  name?: string;
-};
+type JoinInput = { incidentId: string; mode?: VoiceMode; name?: string };
 
 @Injectable()
 export class JoinIncidentRoomUseCase {
   constructor(
-    private readonly prisma: PrismaClient,
-    private readonly lk: LivekitAuthPort,
+    private prisma: PrismaClient,
+    private lk: LivekitAuthPort,
+    private access: VoiceAccessService,
+    private rooms: AudioRoomService,
+    private ids: IdentityService,
+    private events: IncidentEventLogger,
   ) {}
 
-  async execute(input: JoinInput) {
+  async execute(user: CurrentUser, input: JoinInput) {
     const incident = await this.prisma.incident.findUnique({ where: { id: input.incidentId } });
     if (!incident) throw new BadRequestException('Incident not found');
 
-    const roomName = incident.audioRoomId ?? `inc_${incident.code ?? incident.id}`;
-    if (!incident.audioRoomId) {
-      await this.prisma.incident.update({
-        where: { id: incident.id },
-        data: { audioRoomId: roomName },
-      });
-    }
-
-    const canPublishAudio = input.mode !== 'LISTEN';
-
-    // 🔧 corrige o ternário: VICTIM cai no último branch
-    const identity =
-      input.participantType === 'UNIT'
-        ? `unit:${input.participantId ?? 'unknown'}`
-        : input.participantType === 'DISPATCHER'
-          ? `user:${input.participantId ?? 'unknown'}`
-          : `victim:${incident.id}`;
+    const { role, defaultMode } = await this.access.authorize(user, incident);
+    const roomName = await this.rooms.ensureRoom(incident);
+    const mode = input.mode ?? defaultMode;
+    const { identity, displayName } = this.ids.make(role, user.sub, input.name);
 
     const token = await this.lk.mintToken({
       roomName,
       identity,
-      name: input.name ?? input.participantType,
-      canPublishAudio,
+      name: displayName,
+      canPublishAudio: mode !== 'LISTEN',
       canSubscribe: true,
-      metadata: {
-        incidentId: incident.id,
-        participantType: input.participantType,
-        participantId: input.participantId ?? null,
-        mode: input.mode,
-      },
+      metadata: { incidentId: incident.id, role, userId: user.sub, mode },
     });
 
-    await this.prisma.incidentEvent.create({
-      data: {
-        incidentId: incident.id,
-        type: IncidentEventType.VOICE_JOIN_ISSUED, 
-        payload: { identity, participantType: input.participantType, mode: input.mode },
-      },
-    });
+    await this.events.voiceJoined(incident.id, identity, role, mode);
 
-    return { url: this.lk.getUrl(), roomName, token, identity, mode: input.mode };
+    return { url: this.lk.getUrl(), roomName, token, identity, mode };
   }
 }

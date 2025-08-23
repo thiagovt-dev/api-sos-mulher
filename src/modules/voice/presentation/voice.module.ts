@@ -5,6 +5,10 @@ import { JoinIncidentRoomUseCase } from '../application/use-cases/join-incident-
 import { LivekitAuthAdapter } from '../infra/livekit-auth.adapter';
 import { LivekitAuthPort } from '../domain/livekit-auth.port';
 import { CloseIncidentRoomUseCase } from '../application/use-cases/close-incident-room.use-case';
+import { VoiceAccessService } from '../application/services/voice-access.service';
+import { AudioRoomService } from '../application/services/audio-room.service';
+import { IdentityService } from '../application/services/identity.service';
+import { IncidentEventLogger } from '../application/services/incident-event-logger.service';
 
 
 @Module({
@@ -13,6 +17,11 @@ import { CloseIncidentRoomUseCase } from '../application/use-cases/close-inciden
     PrismaClient,
     JoinIncidentRoomUseCase,
     CloseIncidentRoomUseCase,
+    VoiceAccessService,
+    AudioRoomService,
+    IdentityService,
+    IncidentEventLogger,
+
     { provide: LivekitAuthPort, useClass: LivekitAuthAdapter },
   ],
   exports: [],

@@ -6,6 +6,7 @@ import { CloseIncidentRoomUseCase } from '../application/use-cases/close-inciden
 import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiProperty } from '@nestjs/swagger';
 import { Roles } from '@/shared/auth/roles.decorator';
+import { CurrentUser } from '@/shared/auth/current-user.decorator';
 
 class JoinDto {
   @ApiProperty({ example: 'c1f20143-1f7d-4a8b-908f-3f0f6efb0f9a', description: 'ID do incidente' })
@@ -40,7 +41,7 @@ class CloseDto {
 @ApiTags('Voice')
 export class VoiceController {
   constructor(
-    private readonly join: JoinIncidentRoomUseCase,
+    private readonly joinUC: JoinIncidentRoomUseCase,
     private readonly close: CloseIncidentRoomUseCase,
   ) {}
 
@@ -92,11 +93,16 @@ export class VoiceController {
       },
     },
   })
-  async joinRoom(@Body() dto: JoinDto) {
-    return this.join.execute(dto);
+  @Roles('POLICE', 'CITIZEN', 'ADMIN')
+  join(
+    @CurrentUser() user: any,
+    @Body() dto: { incidentId: string; mode?: 'PTT' | 'FULL' | 'LISTEN'; name?: string },
+  ) {
+    return this.joinUC.execute({ sub: user.sub, roles: user.roles ?? [] }, dto);
   }
 
   @Post('close')
+  @Roles('POLICE', 'CITIZEN', 'ADMIN')
   @ApiOperation({ summary: 'Encerrar sala de voz do incidente' })
   @ApiBody({
     type: CloseDto,

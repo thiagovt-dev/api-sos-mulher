@@ -1,12 +1,8 @@
-import { JoinIncidentRoomUseCase } from "../../use-cases/join-incident-room.use-case";
+import { JoinIncidentRoomUseCase } from '../../use-cases/join-incident-room.use-case';
 
 describe('JoinIncidentRoomUseCase (unit)', () => {
   const prisma = {
-    incident: {
-      findUnique: jest.fn(),
-      update: jest.fn(),
-    },
-    incidentEvent: { create: jest.fn() },
+    incident: { findUnique: jest.fn() },
   } as any;
 
   const lk = {
@@ -14,28 +10,26 @@ describe('JoinIncidentRoomUseCase (unit)', () => {
     getUrl: () => 'wss://example.livekit.cloud',
   } as any;
 
+  const access = { authorize: jest.fn().mockResolvedValue({ role: 'ADMIN', defaultMode: 'FULL' }) } as any;
+  const rooms = { ensureRoom: jest.fn().mockResolvedValue('inc_INC-ABCDEF') } as any;
+  const ids = { make: jest.fn().mockReturnValue({ identity: 'admin:U1', displayName: 'Operator' }) } as any;
+  const events = { voiceJoined: jest.fn().mockResolvedValue(undefined) } as any;
+
   beforeEach(() => jest.clearAllMocks());
 
-  it('gera roomName, atualiza audioRoomId e retorna token', async () => {
-    const incident = { id: 'INCID', code: 'INC-ABCDEF', audioRoomId: null };
-    prisma.incident.findUnique.mockResolvedValue(incident);
+  it('autoriza acesso, garante sala, emite evento e retorna token', async () => {
+    prisma.incident.findUnique.mockResolvedValue({ id: 'INCID', code: 'INC-ABCDEF', status: 'OPEN' });
 
-    const sut = new JoinIncidentRoomUseCase(prisma as any, lk as any);
-    const out = await sut.execute({
-      incidentId: 'INCID',
-      participantType: 'DISPATCHER',
-      participantId: 'user-1',
-      mode: 'PTT',
-      name: 'Operador',
-    });
+    const sut = new JoinIncidentRoomUseCase(prisma as any, lk as any, access, rooms, ids, events);
+    const out = await sut.execute({ sub: 'U1', roles: ['ADMIN'] }, { incidentId: 'INCID', mode: 'FULL', name: 'Op' });
 
-    expect(prisma.incident.update).toHaveBeenCalledWith({
-      where: { id: 'INCID' },
-      data: { audioRoomId: 'inc_INC-ABCDEF' },
-    });
+    expect(access.authorize).toHaveBeenCalled();
+    expect(rooms.ensureRoom).toHaveBeenCalled();
+    expect(ids.make).toHaveBeenCalledWith('ADMIN', 'U1', 'Op');
     expect(lk.mintToken).toHaveBeenCalled();
-    expect(out.token).toBe('test.jwt');
-    expect(out.roomName).toBe('inc_INC-ABCDEF');
-    expect(out.identity).toContain('user:');
+    expect(events.voiceJoined).toHaveBeenCalled();
+    expect(out).toEqual(
+      expect.objectContaining({ url: expect.any(String), roomName: 'inc_INC-ABCDEF', token: 'test.jwt', identity: 'admin:U1', mode: 'FULL' }),
+    );
   });
 });
