@@ -24,6 +24,11 @@ module.exports = async () => {
   process.env.NODE_ENV = 'test';
   loadDotEnvTest();
 
+  // Ensure LiveKit defaults for CI to avoid missing env errors
+  if (!process.env.LIVEKIT_URL) process.env.LIVEKIT_URL = 'wss://test.local';
+  if (!process.env.LIVEKIT_API_KEY) process.env.LIVEKIT_API_KEY = 'test_key';
+  if (!process.env.LIVEKIT_API_SECRET) process.env.LIVEKIT_API_SECRET = 'test_secret';
+
   const { execSync } = await import('node:child_process');
   execSync('bunx prisma migrate deploy', { stdio: 'inherit' });
 

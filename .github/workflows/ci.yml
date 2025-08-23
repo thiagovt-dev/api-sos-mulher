@@ -64,7 +64,7 @@ jobs:
       #   run: bun run lint
 
       - name: Unit tests (coverage)
-        run: bun run test:cov
+        run: bun run test:unit:cov
 
-      - name: E2E tests
-        run: bun run test:e2e
+      - name: E2E tests (coverage)
+        run: bun run test:e2e:cov
