@@ -20,15 +20,16 @@ model User {
   passwordHash String?
   roles        Role[]
 
-  unit      Unit?
-  citizen   CitizenProfile?
+  unit    Unit?
+  citizen CitizenProfile?
 
-  devices   Device[]
+  devices Device[]
 
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  incidents Incident[] @relation("CitizenIncidents")
+  incidents      Incident[]       @relation("CitizenIncidents")
+  LocationSample LocationSample[]
 }
 
 enum IncidentStatus {
@@ -53,8 +54,8 @@ enum IncidentEventType {
   UNIT_ACCEPTED
   STATUS_CHANGED
 
-  VOICE_JOINED   // novo
-  VOICE_LEFT     // novo
+  VOICE_JOINED // novo
+  VOICE_LEFT // novo
 
   VOICE_JOIN_ISSUED // legado
   VOICE_ROOM_CLOSED // legado
@@ -75,8 +76,9 @@ model Incident {
   citizenId String?
   citizen   User?   @relation("CitizenIncidents", fields: [citizenId], references: [id])
 
-  dispatches Dispatch[]
-  events     IncidentEvent[]
+  dispatches     Dispatch[]
+  events         IncidentEvent[]
+  LocationSample LocationSample[]
 
   @@index([status, createdAt])
 }
@@ -90,14 +92,15 @@ model Unit {
   active Boolean @default(true)
 
   fcmToken   String?
-  lastLat    Decimal? @db.Decimal(9, 6)
-  lastLng    Decimal? @db.Decimal(9, 6)
+  lastLat    Decimal?  @db.Decimal(9, 6)
+  lastLng    Decimal?  @db.Decimal(9, 6)
   lastSeenAt DateTime?
 
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  Dispatch  Dispatch[]
-  Device    Device[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  Dispatch       Dispatch[]
+  Device         Device[]
+  LocationSample LocationSample[]
 }
 
 model CitizenProfile {
@@ -172,4 +175,35 @@ model Device {
 
   @@index([unitId])
   @@index([userId])
+}
+
+enum LocationSource {
+  MOBILE
+  WEB
+}
+
+model LocationSample {
+  id         String  @id @default(uuid())
+  userId     String
+  unitId     String?
+  incidentId String?
+
+  lat      Decimal  @db.Decimal(9, 6)
+  lng      Decimal  @db.Decimal(9, 6)
+  accuracy Decimal? @db.Decimal(6, 2) // em metros
+  speed    Decimal? @db.Decimal(6, 2) // m/s
+  heading  Decimal? @db.Decimal(6, 2) // graus 0-360
+
+  source     LocationSource @default(MOBILE)
+  recordedAt DateTime       @default(now())
+  createdAt  DateTime       @default(now())
+
+  // relações (todas opcionais para flexibilidade)
+  user     User      @relation(fields: [userId], references: [id])
+  unit     Unit?     @relation(fields: [unitId], references: [id])
+  incident Incident? @relation(fields: [incidentId], references: [id])
+
+  @@index([userId, recordedAt])
+  @@index([unitId, recordedAt])
+  @@index([incidentId, recordedAt])
 }

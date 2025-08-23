@@ -13,6 +13,7 @@ import { DebugModule } from './modules/debug/debug.module';
 import { VoiceModule } from './modules/voice/presentation/voice.module';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './shared/auth/roles.guard';
+import { LocationModule } from './modules/location/presentation/location.module';
 
 const isTest = process.env.NODE_ENV === 'test';
 
@@ -28,6 +29,7 @@ const isTest = process.env.NODE_ENV === 'test';
     DispatchModule,
     UnitsModule,
     VoiceModule,
+    LocationModule,
     DebugModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: RolesGuard }],
