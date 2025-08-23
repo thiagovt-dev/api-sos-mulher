@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/infra/database/prisma.service';
 import { UserRepository } from '../../domain/repositories/user.repository';
-import { User } from '../../domain/entities/user.entity';
+import { AppRole, User } from '../../domain/entities/user.entity';
 
 @Injectable()
 export class PrismaUserRepository implements UserRepository {
@@ -21,7 +21,7 @@ export class PrismaUserRepository implements UserRepository {
       row.email,
       row.username,
       row.passwordHash,
-      (row.roles ?? []) as unknown as ('CITIZEN' | 'POLICE' | 'ADMIN')[],
+      (row.roles ?? []) as unknown as AppRole[],
       row.createdAt,
     );
   }
@@ -34,7 +34,7 @@ export class PrismaUserRepository implements UserRepository {
           row.email,
           row.username,
           row.passwordHash,
-          (row.roles ?? []) as unknown as ('CITIZEN' | 'POLICE' | 'ADMIN')[],
+          (row.roles ?? []) as unknown as AppRole[],
           row.createdAt,
         )
       : null;
@@ -48,7 +48,7 @@ export class PrismaUserRepository implements UserRepository {
           row.email,
           row.username,
           row.passwordHash,
-          (row.roles ?? []) as unknown as ('CITIZEN' | 'POLICE' | 'ADMIN')[],
+          (row.roles ?? []) as unknown as AppRole[],
           row.createdAt,
         )
       : null;

@@ -107,6 +107,7 @@ model CitizenProfile {
   userId String @id
   user   User   @relation(fields: [userId], references: [id])
 
+  name     String?
   phone    String
   street   String?
   number   String?

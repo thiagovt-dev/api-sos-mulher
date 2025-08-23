@@ -22,9 +22,9 @@ describe('Users (e2e)', () => {
     const payload = { email: `dev-${Date.now()}@sos.com`, password: 'secret123' };
 
     const server = app.getHttpServer();
-    const reg = await request(server).post('/api/auth/register').send(payload).expect(201);
-    const id = reg.body.id as string;
+    await request(server).post('/api/auth/register').send(payload).expect(201);
     const login = await request(server).post('/api/auth/login').send({ email: payload.email, password: payload.password }).expect(200);
+    const id = login.body.user.id as string;
     token = login.body.access_token;
 
     // Sanity: GET /users/:id with auth
@@ -41,8 +41,9 @@ describe('Users (e2e)', () => {
 
     const payload = { email: `dev-${Date.now()}@sos.com`, password: 'secret123' };
 
-    const reg = await request(server).post('/api/auth/register').send(payload).expect(201);
-    const id = reg.body.id as string;
+    await request(server).post('/api/auth/register').send(payload).expect(201);
+    const login = await request(server).post('/api/auth/login').send({ email: payload.email, password: payload.password }).expect(200);
+    const id = login.body.user.id as string;
 
     const resGet = await request(server)
       .get(`/api/users/${id}`)
@@ -61,7 +62,6 @@ describe('Users (e2e)', () => {
       .post('/api/auth/register')
       .send({ email, password: 'secret123' })
       .expect(400);
-
-    expect(res.body.message).toMatch(/E-mail já cadastrado/i);
+    expect(res.body.message).toMatch(/already in use|E-mail já cadastrado/i);
   });
 });

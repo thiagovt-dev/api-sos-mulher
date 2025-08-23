@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from '../application/auth.service';
-import { RegisterDto } from '../application/dto/register.dto';
+import { RegisterCitizenDto } from '../application/dto/register-citizen.dto';
 import { LoginDto } from '../application/dto/login.dto';
 import { JwtAuthGuard } from '../infra/guard/jwt.guard';
 import {
@@ -12,8 +12,11 @@ import {
   ApiCreatedResponse,
 } from '@nestjs/swagger';
 import { PoliceLoginUseCase } from '../application/use-cases/police-login.use-case';
+import { RegisterCitizenUseCase } from '@/modules/users/application/use-cases/register-citizen.use-case';
 
 class RegisterResponseDto { id!: string; email!: string }
+
+// Usamos RegisterDto com validação (@IsEmail, @MinLength)
 
 class LoginResponseUserDto { id!: string; email!: string; roles?: string[] }
 
@@ -34,31 +37,43 @@ export class AuthController {
   constructor(
     private readonly auth: AuthService,
     private readonly policeLogin: PoliceLoginUseCase,
+    private readonly registerCitizen: RegisterCitizenUseCase,
   ) {}
 
   @Post('register')
   @ApiOperation({ summary: 'Cadastro de usuário' })
   @ApiBody({
-    type: RegisterDto,
+    type: RegisterCitizenDto,
     examples: {
       exemplo: {
         summary: 'Cadastro simples',
-        value: { email: 'maria@example.com', password: 'minhasenha123' },
+        value: {
+          email: 'maria@example.com',
+          password: 'minhasenha123',
+          name: 'Maria da Silva',
+          phone: '+55 11 99999-0000',
+          street: 'Rua A',
+          number: '123',
+          district: 'Centro',
+          city: 'São Paulo',
+          state: 'SP',
+          zip: '12345-678',
+          lat: -23.55052,
+          lng: -46.633308,
+        },
       },
     },
   })
   @ApiCreatedResponse({
-    description: 'Usuário criado com sucesso',
-    type: RegisterResponseDto,
+    description: 'Usuário criado com sucesso (retorna token JWT)',
     schema: {
       example: {
-        id: 'b6f7c1d2-5a0e-4b21-9a3f-1e2d3c4b5a6f',
-        email: 'maria@example.com',
+        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
       },
     },
   })
-  async register(@Body() dto: RegisterDto) {
-    return this.auth.register(dto);
+  async register(@Body() dto: RegisterCitizenDto) {
+    return this.registerCitizen.execute(dto);
   }
 
   @HttpCode(200)

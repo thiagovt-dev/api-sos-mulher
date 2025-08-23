@@ -1,4 +1,4 @@
-import { User } from '../entities/user.entity';
+import { AppRole, User } from '../entities/user.entity';
 
 export abstract class UserRepository {
   /**
@@ -8,7 +8,7 @@ export abstract class UserRepository {
   abstract create(input: {
     email: string;
     passwordHash: string;
-    roles?: ('CITIZEN' | 'POLICE' | 'ADMIN')[];
+    roles?: AppRole[];
     username?: string | null;
   }): Promise<User>;
 

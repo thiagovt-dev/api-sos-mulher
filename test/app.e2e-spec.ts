@@ -29,7 +29,7 @@ describe('API e2e (Fastify + /api prefix)', () => {
     expect(res.body).toEqual({ status: 'ok' });
   });
 
-  it('POST /api/auth/register e GET /api/users/:id com JWT', async () => {
+  it('POST /api/auth/register → 201 {access_token} e GET /api/users/:id com JWT', async () => {
     const server = app.getHttpServer();
 
     const payload = {
@@ -41,20 +41,16 @@ describe('API e2e (Fastify + /api prefix)', () => {
       .post('/api/auth/register')
       .send(payload)
       .expect(201);
+    expect(res.body).toHaveProperty('access_token');
 
-    expect(res.body).toHaveProperty('id');
-    expect(res.body).toMatchObject({ email: payload.email });
-    expect(res.body).not.toHaveProperty('password');
-    expect(res.body).not.toHaveProperty('passwordHash');
-
-    // login para obter token
+    // login para obter token e id
     const login = await request(server)
       .post('/api/auth/login')
       .send({ email: payload.email, password: payload.password })
       .expect(200);
     const token = login.body.access_token as string;
+    const id = login.body.user.id as string;
 
-    const id = res.body.id as string;
     const resGet = await request(server)
       .get(`/api/users/${id}`)
       .set('Authorization', `Bearer ${token}`)
@@ -75,7 +71,6 @@ describe('API e2e (Fastify + /api prefix)', () => {
       .post('/api/auth/register')
       .send({ email, password: 'secret123' })
       .expect(400);
-
-    expect(res.body.message).toMatch(/E-mail já cadastrado/i);
+    expect(res.body.message).toMatch(/already in use|cadastrado/i);
   });
 });

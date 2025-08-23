@@ -30,7 +30,7 @@ describe('E2E: Location ping', () => {
     const email = `loc-${Date.now()}@sos.com`;
     const password = 'secret123';
 
-    const reg = await request(server)
+    await request(server)
       .post('/api/auth/register')
       .send({ email, password })
       .expect(201);
@@ -52,7 +52,7 @@ describe('E2E: Location ping', () => {
     expect(res.body).toHaveProperty('id');
 
     // verify persisted
-    const userId = reg.body.id as string;
+    const userId = login.body.user.id as string;
     const saved = await prisma.locationSample.findFirst({ where: { userId } });
     expect(saved).toBeTruthy();
     // compara numericamente com 6 casas
