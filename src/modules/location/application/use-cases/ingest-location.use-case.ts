@@ -1,8 +1,8 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { GeoPoint, LocationSample, deriveUnitId } from '../../domain/location.domain';
-import type { LocationRepository } from '../../domain/repositories/location.repository';
+import type { LocationIngestRepository } from '../../domain/repositories/location.ingest.repository';
 
-export type RecordLocationInput = {
+export type IngestLocationInput = {
   userId: string;
   roles: Array<'ADMIN' | 'POLICE' | 'CITIZEN'>;
   lat: number;
@@ -16,12 +16,10 @@ export type RecordLocationInput = {
 };
 
 @Injectable()
-export class RecordLocationUseCase {
-  constructor(
-    @Inject('LocationRepository') private readonly repo: LocationRepository,
-  ) {}
+export class IngestLocationUseCase {
+  constructor(private readonly ingest: LocationIngestRepository) {}
 
-  async execute(input: RecordLocationInput) {
+  async execute(input: IngestLocationInput) {
     const point = new GeoPoint(input.lat, input.lng);
     const unitId = deriveUnitId(input.userId, input.roles);
 
@@ -37,6 +35,6 @@ export class RecordLocationUseCase {
       recordedAt: input.recordedAt,
     });
 
-    return this.repo.create(sample); // { id }
+    return this.ingest.enqueue(sample); // { jobId }
   }
 }

@@ -9,7 +9,7 @@ import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOperation, ApiTags } fro
 @UseGuards(JwtAuthGuard)
 @RolesDec('POLICE', 'CITIZEN', 'ADMIN')
 @ApiTags('Location')
-@ApiBearerAuth()
+@ApiBearerAuth()    
 @Controller('location')
 export class LocationController {
   constructor(private readonly recordUC: RecordLocationUseCase) {}
@@ -19,7 +19,7 @@ export class LocationController {
   @ApiBody({ type: LocationPingDto, required: true })
   @ApiCreatedResponse({ description: 'Amostra criada', schema: { example: { id: 'uuid' } } })
   async ping(@CurrentUser() user: any, @Body() dto: LocationPingDto) {
-    const id = await this.recordUC.execute({
+    return this.recordUC.execute({
       userId: user.sub,
       roles: user.roles ?? [],
       lat: dto.lat,
@@ -31,7 +31,5 @@ export class LocationController {
       source: dto.source ?? 'MOBILE',
       recordedAt: dto.recordedAt ? new Date(dto.recordedAt) : undefined,
     });
-
-    return id; // { id: string }
   }
 }
