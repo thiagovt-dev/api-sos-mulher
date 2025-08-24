@@ -14,6 +14,7 @@ import { VoiceModule } from './modules/voice/presentation/voice.module';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './shared/auth/roles.guard';
 import { LocationModule } from './modules/location/presentation/location.module';
+import { ComplianceModule } from './modules/compliance/compliance.module';
 
 const isTest = process.env.NODE_ENV === 'test';
 
@@ -31,6 +32,7 @@ const isTest = process.env.NODE_ENV === 'test';
     VoiceModule,
     LocationModule,
     DebugModule,
+    ComplianceModule
   ],
   providers: [{ provide: APP_GUARD, useClass: RolesGuard }],
 })

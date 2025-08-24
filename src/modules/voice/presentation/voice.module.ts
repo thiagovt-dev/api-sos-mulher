@@ -8,9 +8,8 @@ import { CloseIncidentRoomUseCase } from '../application/use-cases/close-inciden
 import { VoiceAccessService } from '../application/services/voice-access.service';
 import { AudioRoomService } from '../application/services/audio-room.service';
 import { IdentityService } from '../application/services/identity.service';
-import { IncidentEventLogger } from '../application/services/incident-event-logger.service';
+import { VoiceIncidentEventLogger } from '../application/services/voice-incident-event-logger.service';
 import { LeaveIncidentRoomUseCase } from '../application/use-cases/leave-incident-room.use-case';
-
 
 @Module({
   controllers: [VoiceController],
@@ -22,7 +21,7 @@ import { LeaveIncidentRoomUseCase } from '../application/use-cases/leave-inciden
     VoiceAccessService,
     AudioRoomService,
     IdentityService,
-    IncidentEventLogger,
+    VoiceIncidentEventLogger,
 
     { provide: LivekitAuthPort, useClass: LivekitAuthAdapter },
   ],

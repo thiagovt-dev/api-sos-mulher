@@ -1,60 +1,120 @@
+import { IncidentRepository } from '@/modules/incidents/domain/repositories/incident.repository';
 import { BadRequestException } from '@nestjs/common';
+import { Incident } from '@prisma/client';
 import { CloseIncidentUseCase } from '../../use-cases/close-incident.use-case';
 
-function makePrisma() {
-  const prisma: any = {
-    incident: { findUnique: jest.fn(), update: jest.fn() },
-    incidentEvent: { create: jest.fn() },
-    $transaction: jest.fn().mockResolvedValue(undefined),
-  };
-  return prisma;
+
+function makeRepo() {
+  return {
+    findById: jest.fn(),
+    closeIncident: jest.fn(),
+  } as unknown as jest.Mocked<IncidentRepository>;
+}
+
+function makeIncident(partial: Partial<Incident> = {}): Incident {
+  return {
+    id: 'INC1',
+    code: 'INC-TEST',
+    lat: 0,
+    lng: 0,
+    address: null,
+    description: null,
+    status: 'OPEN',
+    citizenId: null,
+    audioRoomId: null,
+    createdAt: new Date('2025-01-01T00:00:00Z'),
+    updatedAt: new Date('2025-01-01T00:00:00Z'),
+    closedAt: null,
+    closedById: null,
+    closedReason: null,
+    ...partial,
+  } as Incident;
 }
 
 describe('CloseIncidentUseCase (unit)', () => {
-  const gateway = { emitUpdated: jest.fn() } as any;
-
   beforeEach(() => jest.clearAllMocks());
 
   it('fecha incidente como RESOLVED por padrão', async () => {
-    const prisma = makePrisma();
-    prisma.incident.findUnique
-      .mockResolvedValueOnce({ id: 'INC1', status: 'OPEN' }) // load current
-      .mockResolvedValueOnce({ id: 'INC1', status: 'RESOLVED', dispatches: [] }); // fresh
+    const repo = makeRepo();
+    const current = makeIncident({ id: 'INC1', status: 'OPEN' });
+    const updated = makeIncident({
+      id: 'INC1',
+      status: 'RESOLVED',
+      closedAt: new Date(),
+      closedById: 'user-1',
+    });
 
-    const sut = new CloseIncidentUseCase(prisma as any, gateway);
-    const out = await sut.execute({ incidentId: 'INC1' });
+    (repo.findById as jest.Mock).mockResolvedValueOnce(current);
+    (repo.closeIncident as jest.Mock).mockResolvedValueOnce(updated);
 
-    expect(prisma.$transaction).toHaveBeenCalled();
-    expect(gateway.emitUpdated).toHaveBeenCalledWith({ id: 'INC1', status: 'RESOLVED', dispatches: [] });
-    expect(out).toEqual({ ok: true, incidentId: 'INC1', status: 'RESOLVED' });
+    const sut = new CloseIncidentUseCase(repo);
+    const out = await sut.execute({ incidentId: 'INC1', closedById: 'user-1' });
+
+    expect(repo.findById).toHaveBeenCalledWith('INC1');
+    expect(repo.closeIncident).toHaveBeenCalledWith({
+      incidentId: 'INC1',
+      newStatus: 'RESOLVED',
+      closedById: 'user-1',
+      closedReason: undefined,
+    });
+    expect(out.status).toBe('RESOLVED');
   });
 
   it('fecha incidente como CANCELED com razão', async () => {
-    const prisma = makePrisma();
-    prisma.incident.findUnique
-      .mockResolvedValueOnce({ id: 'INC2', status: 'OPEN' })
-      .mockResolvedValueOnce({ id: 'INC2', status: 'CANCELED', dispatches: [] });
+    const repo = makeRepo();
+    const current = makeIncident({ id: 'INC2', status: 'OPEN' });
+    const updated = makeIncident({
+      id: 'INC2',
+      status: 'CANCELED',
+      closedAt: new Date(),
+      closedById: 'user-2',
+      closedReason: 'reported false alarm',
+    });
 
-    const sut = new CloseIncidentUseCase(prisma as any, gateway);
-    const out = await sut.execute({ incidentId: 'INC2', as: 'CANCELED', reason: 'reported false alarm' });
+    (repo.findById as jest.Mock).mockResolvedValueOnce(current);
+    (repo.closeIncident as jest.Mock).mockResolvedValueOnce(updated);
 
+    const sut = new CloseIncidentUseCase(repo);
+    const out = await sut.execute({
+      incidentId: 'INC2',
+      as: 'CANCELED',
+      reason: 'reported false alarm',
+      closedById: 'user-2',
+    });
+
+    expect(repo.closeIncident).toHaveBeenCalledWith({
+      incidentId: 'INC2',
+      newStatus: 'CANCELED',
+      closedById: 'user-2',
+      closedReason: 'reported false alarm',
+    });
     expect(out.status).toBe('CANCELED');
+    expect(out.closedReason).toBe('reported false alarm');
   });
 
   it('rejeita quando incidente não existe', async () => {
-    const prisma = makePrisma();
-    prisma.incident.findUnique.mockResolvedValue(null);
+    const repo = makeRepo();
+    (repo.findById as jest.Mock).mockResolvedValueOnce(null);
 
-    const sut = new CloseIncidentUseCase(prisma as any, gateway);
-    await expect(sut.execute({ incidentId: 'NA' })).rejects.toBeInstanceOf(BadRequestException);
+    const sut = new CloseIncidentUseCase(repo);
+    await expect(sut.execute({ incidentId: 'NA', closedById: 'user-x' })).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+
+    expect(repo.closeIncident).not.toHaveBeenCalled();
   });
 
   it('rejeita quando incidente já está fechado', async () => {
-    const prisma = makePrisma();
-    prisma.incident.findUnique.mockResolvedValue({ id: 'INC3', status: 'RESOLVED' });
+    const repo = makeRepo();
+    (repo.findById as jest.Mock).mockResolvedValueOnce(
+      makeIncident({ id: 'INC3', status: 'RESOLVED' }),
+    );
 
-    const sut = new CloseIncidentUseCase(prisma as any, gateway);
-    await expect(sut.execute({ incidentId: 'INC3' })).rejects.toBeInstanceOf(BadRequestException);
+    const sut = new CloseIncidentUseCase(repo);
+    await expect(sut.execute({ incidentId: 'INC3', closedById: 'user-y' })).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+
+    expect(repo.closeIncident).not.toHaveBeenCalled();
   });
 });
-

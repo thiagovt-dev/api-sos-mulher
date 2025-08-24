@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { LivekitAuthPort } from '../../domain/livekit-auth.port';
 import { AudioRoomService } from '../services/audio-room.service';
 import { IdentityService } from '../services/identity.service';
-import { IncidentEventLogger } from '../services/incident-event-logger.service';
+import { VoiceIncidentEventLogger } from '../services/voice-incident-event-logger.service';
 import { VoiceAccessService } from '../services/voice-access.service';
 import { CurrentUser, VoiceMode } from '../types/type';
 
@@ -17,7 +17,7 @@ export class JoinIncidentRoomUseCase {
     private access: VoiceAccessService,
     private rooms: AudioRoomService,
     private ids: IdentityService,
-    private events: IncidentEventLogger,
+    private events: VoiceIncidentEventLogger,
   ) {}
 
   async execute(user: CurrentUser, input: JoinInput) {
