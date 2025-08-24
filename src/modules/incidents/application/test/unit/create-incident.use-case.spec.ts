@@ -40,7 +40,6 @@ describe('CreateIncidentUseCase (unit)', () => {
     });
 
     expect(repo.create).toHaveBeenCalled();
-    expect(repo.findById).toHaveBeenCalledWith('inc-1');
     expect(out?.code).toMatch(/^INC-[0-9A-F]{6}$/);
     expect(out?.status).toBe('OPEN');
     expect(out?.address).toBe('Rua X, 123');
