@@ -30,6 +30,7 @@ model User {
 
   incidents      Incident[]       @relation("CitizenIncidents")
   LocationSample LocationSample[]
+  Incident       Incident[]
 }
 
 enum IncidentStatus {
@@ -75,6 +76,11 @@ model Incident {
 
   citizenId String?
   citizen   User?   @relation("CitizenIncidents", fields: [citizenId], references: [id])
+
+  closedAt     DateTime?
+  closedById   String?
+  closedBy     User?     @relation(fields: [closedById], references: [id])
+  closedReason String?
 
   dispatches     Dispatch[]
   events         IncidentEvent[]

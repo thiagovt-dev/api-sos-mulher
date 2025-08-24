@@ -1,12 +1,22 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { IsIn, IsLatitude, IsLongitude, IsOptional, IsString } from 'class-validator';
-import { CreateIncidentUseCase } from '../application/use-cases/create-incident.use-case';
-import { PrismaIncidentRepository } from '../infra/repositories/prisma-incident.repository';
 import { JwtAuthGuard } from '@/modules/auth/infra/guard/jwt.guard';
-import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ApiProperty } from '@nestjs/swagger';
-import { CloseIncidentUseCase } from '../application/use-cases/close-incident.use-case';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiProperty,
+} from '@nestjs/swagger';
+
 import { Roles } from '@/shared/auth/roles.decorator';
+import { CurrentUser } from '@/shared/auth/current-user.decorator';
+
+import { IncidentsGateway } from '../infra/incidents.gateway';
+import { CreateIncidentUseCase } from '../application/use-cases/create-incident.use-case';
+import { CloseIncidentUseCase } from '../application/use-cases/close-incident.use-case';
+import { IncidentsQuery } from '../application/queries/incidents.query';
 
 class CreateIncidentDto {
   @ApiProperty({ example: -23.55052, description: 'Latitude do local do incidente' })
@@ -27,6 +37,7 @@ class CreateIncidentDto {
   @IsString()
   description?: string;
 }
+
 class CloseIncidentDto {
   @IsOptional() @IsString() reason?: string;
   @IsOptional() @IsIn(['RESOLVED', 'CANCELED'] as const) as?: 'RESOLVED' | 'CANCELED';
@@ -39,8 +50,9 @@ class CloseIncidentDto {
 export class IncidentsController {
   constructor(
     private readonly createIncident: CreateIncidentUseCase,
-    private readonly repo: PrismaIncidentRepository,
     private readonly closeIncident: CloseIncidentUseCase,
+    private readonly gateway: IncidentsGateway,
+    private readonly query: IncidentsQuery,
   ) {}
 
   @Post()
@@ -103,11 +115,29 @@ export class IncidentsController {
     },
   })
   list() {
-    return this.repo.listOpen();
+    // retorna com dispatches para satisfazer o E2E
+    return this.query.listOpenWithDispatches();
   }
 
   @Post(':id/close')
-  close(@Param('id') id: string, @Body() dto: CloseIncidentDto) {
-    return this.closeIncident.execute({ incidentId: id, reason: dto.reason, as: dto.as });
+  @Roles('ADMIN', 'POLICE', 'CITIZEN')
+  @ApiOperation({ summary: 'Encerrar incidente (resolve/cancel)' })
+  @ApiBody({
+    type: CloseIncidentDto,
+    examples: {
+      resolve: { value: { as: 'RESOLVED', reason: 'Atendido no local' } },
+      cancel: { value: { as: 'CANCELED', reason: 'Cancelado pelo solicitante' } },
+    },
+  })
+  async close(@Param('id') id: string, @Body() dto: CloseIncidentDto, @CurrentUser() user: any) {
+    const updated = await this.closeIncident.execute({
+      incidentId: id,
+      reason: dto.reason,
+      as: dto.as,
+      closedById: user.sub,
+    });
+
+    this.gateway.emitUpdated(updated);
+    return { ok: true, incidentId: updated.id, status: updated.status };
   }
 }
