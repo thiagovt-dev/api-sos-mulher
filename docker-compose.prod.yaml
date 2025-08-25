@@ -28,18 +28,16 @@ services:
   app:
     build:
       context: .
-      target: dev
+      target: production
+    image: ${PROD_IMAGE_NAME:-api-sos-mulher}:latest
     container_name: ${COMPOSE_PROJECT_NAME:-api-sos-mulher}-app
     environment:
-      - NODE_ENV=${NODE_ENV:-development}
+      - NODE_ENV=${NODE_ENV:-production}
       - PORT=${PORT:-4000}
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
     ports:
       - "${PORT:-4000}:4000"
-    volumes:
-      - ./:/app
-      - /app/node_modules
     depends_on:
       db:
         condition: service_healthy

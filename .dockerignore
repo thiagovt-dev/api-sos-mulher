@@ -1,0 +1,36 @@
+# Dependencies and caches
+node_modules
+bun.lockb
+npm-debug.log
+pnpm-lock.yaml
+yarn.lock
+
+# VCS
+.git
+.gitignore
+
+# Docker
+Dockerfile*
+.dockerignore
+
+# Build outputs and coverage
+coverage
+build
+dist
+.tmp
+
+# Local env and editor files
+.env
+.env.*
+.vscode
+.idea
+backups
+
+# Logs and temp files
+**/*.log
+**/*.sqlite
+**/*.swp
+**/*.swo
+
+# Prisma local artifacts
+prisma/dev.db
